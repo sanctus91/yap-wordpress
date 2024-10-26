@@ -6,7 +6,7 @@
   become: true
   gather_facts: true
   tasks:
-    - name: Get Ubuntu version
-      set_fact:
-        ubuntu_version: "{{ ansible_facts['distribution_major_version'] }}"
-        cacheable: yes
+    # - name: Get Ubuntu version
+    #   set_fact:
+    #     ubuntu_version: "{{ ansible_facts['distribution_major_version'] }}"
+    #     cacheable: yes

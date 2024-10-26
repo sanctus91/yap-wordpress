@@ -1,6 +1,6 @@
 import os
 from re import match
-from copy import copy
+from copy import copy, deepcopy
 from secrets import token_hex
 from warnings import warn
 from getpass import getpass
@@ -13,14 +13,33 @@ from lampsible.constants import *
 
 class ArgValidator():
 
-    def __init__(self, args, private_data_dir, project_dir):
-        self.args             = args
-        self.private_data_dir = private_data_dir
-        self.project_dir      = project_dir
+    def __init__(self, args, ansible_facts):
+        self.args           = args
+        self.validated_args = deepcopy(args)
+        self.ansible_facts  = ansible_facts
 
 
-    def get_args(self):
-        return self.args
+    @staticmethod
+    def pre_validate_args(raw_args):
+        tmp_args = deepcopy(raw_args)
+        try:
+            os.makedirs(tmp_args.private_data_dir)
+        except FileExistsError:
+            pass
+
+        try:
+            tmp_inventory = tmp_args.web_user_host.split('@')
+            assert len(tmp_inventory) == 2
+            tmp_args.web_user = tmp_inventory[0]
+            tmp_args.web_host = tmp_inventory[1]
+        except (AttributeError, AssertionError):
+            print('FATAL! First positional argument must be in the format of user@host')
+            return 1
+        return tmp_args
+
+
+    def get_validated_args(self):
+        return self.validated_args
 
 
     def get_apache_vhosts(self):
@@ -41,6 +60,7 @@ class ArgValidator():
             return ''
 
 
+    # DEPRECATED
     def get_wordpress_auth_vars(self):
         auth_var_names = [
             'auth_key',
@@ -82,52 +102,52 @@ class ArgValidator():
 
     def get_apache_allow_override(self):
         return (
-            self.args.action in ['laravel', 'drupal']
+            self.validated_args.action in ['laravel', 'drupal']
             or (
-                self.args.action == 'wordpress'
-                and not self.args.wordpress_insecure_allow_xmlrpc
+                self.validated_args.action == 'wordpress'
+                and not self.validated_args.wordpress_insecure_allow_xmlrpc
             )
         )
 
 
     def get_certbot_domains_string(self):
         try:
-            return '-d {}'.format(' -d '.join(self.args.domains_for_ssl))
+            return '-d {}'.format(' -d '.join(self.validated_args.domains_for_ssl))
         except TypeError:
             return ''
 
 
     def get_certbot_test_cert_string(self):
-        return '--test-cert' if self.args.test_cert else ''
+        return '--test-cert' if self.validated_args.test_cert else ''
 
 
     def get_extravars_dict(self):
         extravars = {
-            'web_host': self.web_host,
+            'web_host': self.validated_args.web_host,
             'apache_vhosts': self.get_apache_vhosts(),
-            'apache_document_root': self.apache_document_root,
-            'apache_vhost_name': self.apache_vhost_name,
+            'apache_document_root': self.validated_args.apache_document_root,
+            'apache_vhost_name': self.validated_args.apache_vhost_name,
             'apache_custom_conf_name': self.get_apache_custom_conf_name(),
-            'database_username': self.args.database_username,
-            'database_password': self.args.database_password,
-            'database_host': self.args.database_host,
-            'database_name': self.args.database_name,
-            'database_table_prefix': self.args.database_table_prefix,
-            'ssl_certbot': self.args.ssl_certbot,
-            'ssl_selfsigned': self.args.ssl_selfsigned,
-            'email_for_ssl': self.args.email_for_ssl,
+            'database_username': self.validated_args.database_username,
+            'database_password': self.validated_args.database_password,
+            'database_host': self.validated_args.database_host,
+            'database_name': self.validated_args.database_name,
+            'database_table_prefix': self.validated_args.database_table_prefix,
+            'ssl_certbot': self.validated_args.ssl_certbot,
+            'ssl_selfsigned': self.validated_args.ssl_selfsigned,
+            'email_for_ssl': self.validated_args.email_for_ssl,
             'certbot_domains_string': self.get_certbot_domains_string(),
             'certbot_test_cert_string': self.get_certbot_test_cert_string(),
-            'insecure_skip_fail2ban': self.args.insecure_skip_fail2ban,
-            'extra_packages': self.args.extra_packages,
-            'extra_env_vars': self.extra_env_vars,
+            'insecure_skip_fail2ban': self.validated_args.insecure_skip_fail2ban,
+            'extra_packages': self.validated_args.extra_packages,
+            'extra_env_vars': self.validated_args.extra_env_vars,
         }
-        if self.args.remote_sudo_password:
+        if self.validated_args.remote_sudo_password:
             # TODO
             # TODO: It would be better to not include this as an extravar, but to
             # make use of Ansible Runner's password feature in the
             # Input Directory Hierarchy.
-            extravars['ansible_sudo_pass'] = self.args.remote_sudo_password
+            extravars['ansible_sudo_pass'] = self.validated_args.remote_sudo_password
 
         if self.args.action in [
             'lamp-stack',
@@ -137,81 +157,55 @@ class ArgValidator():
             'laravel',
             'drupal',
         ]:
-            extravars['php_version'] = self.args.php_version
-            extravars['php_extensions'] = self.php_extensions
-            extravars['composer_packages'] = self.args.composer_packages
+            extravars['php_version'] = self.validated_args.php_version
+            extravars['php_extensions'] = self.validated_args.php_extensions
+            extravars['composer_packages'] = self.validated_args.composer_packages
             extravars['composer_working_directory'] = \
-                    self.args.composer_working_directory
-            extravars['composer_project'] = self.args.composer_project
+                    self.validated_args.composer_working_directory
+            extravars['composer_project'] = self.validated_args.composer_project
 
         if self.args.action in [
             'wordpress',
             'joomla',
             'drupal',
         ]:
-            extravars['site_title'] = self.args.site_title
-            extravars['admin_username'] = self.args.admin_username
-            extravars['admin_email'] = self.args.admin_email
-            extravars['admin_password'] = self.args.admin_password
+            extravars['site_title'] = self.validated_args.site_title
+            extravars['admin_username'] = self.validated_args.admin_username
+            extravars['admin_email'] = self.validated_args.admin_email
+            extravars['admin_password'] = self.validated_args.admin_password
 
         if self.args.action == 'wordpress':
-            extravars['wordpress_version'] = self.args.wordpress_version
-            extravars['wordpress_locale'] = self.args.wordpress_locale
+            extravars['wordpress_version'] = self.validated_args.wordpress_version
+            extravars['wordpress_locale'] = self.validated_args.wordpress_locale
 
             # TODO: This should be deprecated in favor of
             # letting WP-CLI handlethese.
             extravars['wordpress_auth_vars'] = self.get_wordpress_auth_vars()
 
             extravars['wordpress_insecure_allow_xmlrpc'] = \
-                self.args.wordpress_insecure_allow_xmlrpc
+                self.validated_args.wordpress_insecure_allow_xmlrpc
             extravars['wordpress_url'] = self.get_wordpress_url()
             extravars['wordpress_manual_install'] = \
-                self.args.wordpress_manual_install
+                self.validated_args.wordpress_manual_install
 
         elif self.args.action == 'joomla':
             # TODO: We could do something like 'cms_version' instead.
-            extravars['joomla_version'] = self.args.joomla_version
+            extravars['joomla_version'] = self.validated_args.joomla_version
             extravars['joomla_admin_full_name'] = \
-                self.args.joomla_admin_full_name
+                self.validated_args.joomla_admin_full_name
 
         elif self.args.action == 'laravel':
-            extravars['app_build_path'] = self.args.app_build_path
-            extravars['app_source_root'] = self.app_source_root
-            extravars['app_local_env'] = self.args.app_local_env
+            extravars['app_build_path'] = self.validated_args.app_build_path
+            extravars['app_source_root'] = self.validated_args.app_source_root
+            extravars['app_local_env'] = self.validated_args.app_local_env
             extravars['laravel_artisan_commands'] = \
-                self.args.laravel_artisan_commands
-            extravars['laravel_extra_env_vars'] = self.laravel_extra_env_vars
+                self.validated_args.laravel_artisan_commands
+            extravars['laravel_extra_env_vars'] = self.validated_args.laravel_extra_env_vars
 
         elif self.args.action == 'drupal':
-            extravars['drupal_profile'] = self.args.drupal_profile
+            extravars['drupal_profile'] = self.validated_args.drupal_profile
 
         return extravars
-
-
-    def get_inventory(self):
-        return os.path.abspath(os.path.join(self.private_data_dir, 'inventory'))
-
-
-    def fetch_ansible_facts(self):
-        rc = RunnerConfig(
-            private_data_dir=self.private_data_dir,
-            project_dir=self.project_dir,
-            playbook='get-ansible-facts.yml',
-        )
-
-        if self.args.ssh_key_file:
-            try:
-                with open(os.path.abspath(self.args.ssh_key_file), 'r') as key_file:
-                    key_data = key_file.read()
-                rc.ssh_key_data = key_data
-            except FileNotFoundError:
-                print('Warning! SSH key file not found!')
-
-        rc.prepare()
-        r = Runner(config=rc)
-        r.run()
-
-        self.ansible_facts = r.get_fact_cache(self.web_host)
 
 
     def handle_defaults(
@@ -272,7 +266,7 @@ class ArgValidator():
                     default_value = tmp_val
 
                 setattr(
-                    self.args,
+                    self.validated_args,
                     arg_dict['arg_name'],
                     default_value
                 )
@@ -303,50 +297,54 @@ class ArgValidator():
             return password
 
 
-    def prepare_inventory(self):
-        try:
-            web_user_host = self.args.web_user_host.split('@')
-            self.web_user = web_user_host[0]
-            self.web_host = web_user_host[1]
-        except (IndexError, AttributeError):
-            print("FATAL! First positional argument must be in the format of 'user@host'")
-            return 1
 
-        if self.args.database_system_user_host:
-            try:
-                db_sys_user_host = self.args.database_system_user_host.split('@')
-                self.db_sys_user = db_sys_user_host[0]
-                self.db_sys_host = db_sys_user_host[1]
-            except IndexError:
-                print("FATAL! --database-system-user-host must be in the format of 'user@host'. Alternatively, omit it to install database on web server.")
-                return 1
-        else:
-            self.db_sys_user = self.web_user
-            self.db_sys_host = self.web_host
+        # # TODO?!?
+        # with InventoryFile(
+        #     os.path.join(
+        #         self.private_data_dir,
+        #         'inventory',
+        #         'hosts'
+        #     )
+        # ) as inventory_file:
 
-        with InventoryFile(
-            os.path.join(
-                self.private_data_dir,
-                'inventory',
-                'hosts'
-            )
-        ) as inventory_file:
+        #     inventory_file.add_groups([
+        #         'web_servers',
+        #         'database_servers',
+        #     ])
+        #     inventory_file.add_host(self.web_host, 'web_servers')
+        #     inventory_file.add_host(self.db_sys_host, 'database_servers')
+        #     inventory_file.set_ansible_user(self.web_host, self.web_user)
+        #     inventory_file.set_ansible_user(self.db_sys_host, self.db_sys_user)
 
-            inventory_file.add_groups([
-                'web_servers',
-                'database_servers',
-            ])
-            inventory_file.add_host(self.web_host, 'web_servers')
-            inventory_file.add_host(self.db_sys_host, 'database_servers')
-            inventory_file.set_ansible_user(self.web_host, self.web_user)
-            inventory_file.set_ansible_user(self.db_sys_host, self.db_sys_user)
-
-            inventory_file.write()
+        #     inventory_file.write()
 
         return 0
 
 
     def validate_ansible_runner_args(self):
+        if self.args.web_user_host:
+            try:
+                web_user_host = self.args.web_user_host.split('@')
+                self.validated_args.web_user = web_user_host[0]
+                self.validated_args.web_host = web_user_host[1]
+            except (IndexError, AttributeError):
+                print("FATAL! First positional argument must be in the format of 'user@host'.")
+                return 1
+        elif not (self.args.web_user and self.args.web_host):
+            print("FATAL! Got no 'web_user' and 'web_host'.")
+            return 1
+
+        if self.args.database_system_user_host:
+            try:
+                db_sys_user_host = self.args.database_system_user_host.split('@')
+                self.validated_args.db_sys_user = db_sys_user_host[0]
+                self.validated_args.db_sys_host = db_sys_user_host[1]
+            except IndexError:
+                print("FATAL! --database-system-user-host must be in the format of 'user@host'. Alternatively, omit it to install database on web server.")
+                return 1
+        else:
+            self.validated_args.db_sys_user = self.validated_args.web_user
+            self.validated_args.db_sys_host = self.validated_args.web_host
         if self.args.action not in SUPPORTED_ACTIONS:
             print('FATAL! Second positional argument must be one of {}'.format(
                 ', '.join(SUPPORTED_ACTIONS)
@@ -358,14 +356,14 @@ class ArgValidator():
             print(INSECURE_CLI_PASS_WARNING)
             return 1
         if self.args.ask_remote_sudo:
-            self.args.remote_sudo_password = self.get_pass_and_check(
+            self.validated_args.remote_sudo_password = self.get_pass_and_check(
                 'Please enter sudo password for remote host: ')
         return 0
 
 
     def validate_apache_args(self):
 
-        server_name = self.web_host
+        server_name = self.validated_args.web_host
         try:
             assert FQDN(server_name).is_valid
         except AssertionError:
@@ -376,50 +374,34 @@ class ArgValidator():
             'joomla',
         ]:
             if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
-                self.apache_document_root = '{}/{}'.format(
+                self.validated_args.apache_document_root = '{}/{}'.format(
                     DEFAULT_APACHE_DOCUMENT_ROOT,
                     self.args.action
                 )
-            else:
-                self.apache_document_root = self.args.apache_document_root
 
             if self.args.apache_vhost_name == DEFAULT_APACHE_VHOST_NAME:
-                self.apache_vhost_name = self.args.action
-            else:
-                self.apache_vhost_name = self.args.apache_vhost_name
+                self.validated_args.apache_vhost_name = self.args.action
 
         elif self.args.action == 'drupal':
             if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
-                self.apache_document_root = '{}/drupal/web'.format(
+                self.validated_args.apache_document_root = '{}/drupal/web'.format(
                     DEFAULT_APACHE_DOCUMENT_ROOT
                 )
-            else:
-                self.apache_document_root = self.args.apache_document_root
-
-            self.apache_vhost_name = self.args.apache_vhost_name
 
         elif self.args.action == 'laravel':
             if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
-                self.apache_document_root = '{}/{}/public'.format(
+                self.validated_args.apache_document_root = '{}/{}/public'.format(
                     DEFAULT_APACHE_DOCUMENT_ROOT,
                     self.args.app_name
                 )
-            else:
-                self.apache_document_root = self.args.apache_document_root
 
             if self.args.apache_vhost_name == DEFAULT_APACHE_VHOST_NAME:
-                self.apache_vhost_name = self.args.app_name
-            else:
-                self.apache_vhost_name = self.args.apache_vhost_name
-
-        else:
-            self.apache_document_root = self.args.apache_document_root
-            self.apache_vhost_name = self.args.apache_vhost_name
+                self.validated_args.apache_vhost_name = self.args.app_name
 
         base_vhost_dict = {
             'base_vhost_file': '{}.conf'.format(DEFAULT_APACHE_VHOST_NAME),
-            'document_root':  self.apache_document_root,
-            'vhost_name':     self.apache_vhost_name,
+            'document_root':  self.validated_args.apache_document_root,
+            'vhost_name':     self.validated_args.apache_vhost_name,
             'server_name':    server_name,
             'server_admin':   self.args.apache_server_admin,
             'allow_override': self.get_apache_allow_override(),
@@ -429,6 +411,7 @@ class ArgValidator():
 
         if self.args.ssl_selfsigned:
 
+            # TODO: Use deepcopy?
             ssl_vhost_dict = copy(base_vhost_dict)
 
             ssl_vhost_dict['base_vhost_file'] = 'default-ssl.conf'
@@ -490,8 +473,8 @@ class ArgValidator():
                 },
             ], True, True)
 
-        if self.args.database_username and not self.args.database_password:
-            self.args.database_password = self.get_pass_and_check(
+        if self.validated_args.database_username and not self.validated_args.database_password:
+            self.validated_args.database_password = self.get_pass_and_check(
                 'Please enter a database password: ',
                 0,
                 True
@@ -559,10 +542,10 @@ class ArgValidator():
         # User passed nothing, so we set the proper version based on
         # the Ubuntu version
         if self.args.php_version == DEFAULT_PHP_VERSION:
-            self.args.php_version = ubuntu_to_php_version[ubuntu_version]
+            self.validated_args.php_version = ubuntu_to_php_version[ubuntu_version]
 
         # Sanity check
-        elif self.args.php_version not in SUPPORTED_PHP_VERSIONS:
+        elif self.validated_args.php_version not in SUPPORTED_PHP_VERSIONS:
             print('FATAL! Invalid PHP version!')
             return 1
 
@@ -570,9 +553,9 @@ class ArgValidator():
         # TODO: In the future, we should have a global "non-interactive" flag,
         # based on which this can be handled better, for example, "interactive"
         # mode could offer to correct the user's input.
-        elif self.args.php_version != ubuntu_to_php_version[ubuntu_version]:
+        elif self.validated_args.php_version != ubuntu_to_php_version[ubuntu_version]:
             print('Warning! You are trying to install PHP {} on Ubuntu {}. Unless you manually configured the APT repository, this will not work.'.format(
-                self.args.php_version,
+                self.validated_args.php_version,
                 self.ansible_facts['ubuntu_version']
             ))
 
@@ -615,19 +598,19 @@ class ArgValidator():
         else:
             extensions = []
 
-        self.php_extensions = [
+        self.validated_args.php_extensions = [
             'php{}-{}'.format(
-                self.args.php_version,
+                self.validated_args.php_version,
                 extension
             ) for extension in extensions
         ]
 
         try:
-            self.args.composer_packages = self.args.composer_packages.split(',')
-            for package in self.args.composer_packages:
+            self.validated_args.composer_packages = self.args.composer_packages.split(',')
+            for package in self.validated_args.composer_packages:
                 assert len(package.split('/')) == 2
         except AttributeError:
-            self.args.composer_packages = []
+            self.validated_args.composer_packages = []
         except AssertionError:
             print('Got invalid --composer-packages')
             return 1
@@ -636,7 +619,7 @@ class ArgValidator():
             [{
                 'arg_name': 'composer_working_directory',
                 'cli_default_value': None,
-                'override_default_value': self.apache_document_root,
+                'override_default_value': self.validated_args.apache_document_root,
             }]
         )
 
@@ -688,7 +671,7 @@ class ArgValidator():
             return 1
 
         if not self.args.admin_password:
-            self.args.admin_password = self.get_pass_and_check(
+            self.validated_args.admin_password = self.get_pass_and_check(
                 "Please choose a password for the website's admin user: ",
                 0,
                 True
@@ -700,8 +683,8 @@ class ArgValidator():
             else:
                 www_domain = 'www.{}'.format(self.web_host)
 
-            if www_domain not in self.args.domains_for_ssl:
-                self.args.domains_for_ssl.append(www_domain)
+            if www_domain not in self.validated_args.domains_for_ssl:
+                self.validated_args.domains_for_ssl.append(www_domain)
 
             self.wordpress_url = www_domain
 
@@ -730,11 +713,11 @@ class ArgValidator():
             return 0
 
         if int(self.args.joomla_version[0]) >= 5 \
-                and float(self.args.php_version) < 8.1:
+                and float(self.validated_args.php_version) < 8.1:
             print('FATAL! Joomla versions 5 and newer require minimum PHP version 8.1!')
             return 1
         elif int(self.args.joomla_version[0]) >= 4 \
-                and float(self.args.php_version) < 7.2:
+                and float(self.validated_args.php_version) < 7.2:
             # Actually it requires at least 7.2.5, but I'm trusting package managers
             # to get this right, also, no one should be using that old stuff anymore.
             print('FATAL! Joomla 4 requires minimum PHP version 7.2!')
@@ -771,7 +754,7 @@ class ArgValidator():
             return 1
 
         if not self.args.admin_password:
-            self.args.admin_password = self.get_pass_and_check(
+            self.validated_args.admin_password = self.get_pass_and_check(
                 "Please choose a password for the website's admin user: ",
                 12,
                 True
@@ -787,18 +770,18 @@ class ArgValidator():
         if self.args.action != 'drupal':
             return 0
 
-        if float(self.args.php_version) < 8.3:
+        if float(self.validated_args.php_version) < 8.3:
             print('The latest version of Drupal requires minimum PHP 8.3.')
             return 1
 
-        self.args.composer_project = 'drupal/recommended-project'
-        self.args.composer_working_directory = '{}/drupal'.format(
+        self.validated_args.composer_project = 'drupal/recommended-project'
+        self.validated_args.composer_working_directory = '{}/drupal'.format(
             DEFAULT_APACHE_DOCUMENT_ROOT
         )
         try:
-            self.args.composer_packages.append('drush/drush')
+            self.validated_args.composer_packages.append('drush/drush')
         except AttributeError:
-            self.args.composer_packages = ['drush/drush']
+            self.validated_args.composer_packages = ['drush/drush']
 
         self.handle_defaults([
             {
@@ -826,7 +809,7 @@ class ArgValidator():
             return 1
 
         if not self.args.admin_password:
-            self.args.admin_password = self.get_pass_and_check(
+            self.validated_args.admin_password = self.get_pass_and_check(
                 "Please choose a password for the website's admin user: ",
                 8,
                 True
@@ -841,20 +824,20 @@ class ArgValidator():
             return 0
 
         try:
-            self.args.app_build_path = os.path.abspath(self.args.app_build_path)
-            assert os.path.isfile(self.args.app_build_path)
+            self.validated_args.app_build_path = os.path.abspath(self.args.app_build_path)
+            assert os.path.isfile(self.validated_args.app_build_path)
         except TypeError:
             print('FATAL! --app-build-path required! Please specify the path of a build archive of your application.')
             return 1
         except AssertionError:
             print('FATAL! {} not found on local file system.'.format(
-                self.args.app_build_path
+                self.validated_args.app_build_path
             ))
             return 1
 
-        self.app_source_root = '/var/www/html/{}'.format(self.args.app_name)
+        self.validated_args.app_source_root = '/var/www/html/{}'.format(self.validated_args.app_name)
 
-        self.args.laravel_artisan_commands = \
+        self.validated_args.laravel_artisan_commands = \
             self.args.laravel_artisan_commands.split(',')
 
         return 0
@@ -862,27 +845,27 @@ class ArgValidator():
 
     def validate_misc_args(self):
         try:
-            self.args.extra_packages = self.args.extra_packages.split(',')
+            self.validated_args.extra_packages = self.args.extra_packages.split(',')
         except AttributeError:
-            self.args.extra_packages = []
+            self.validated_args.extra_packages = []
 
         try:
-            self.args.extra_env_vars = self.args.extra_env_vars.split(',')
+            self.validated_args.extra_env_vars = self.args.extra_env_vars.split(',')
             try:
-                for i in range(len(self.args.extra_env_vars)):
-                    assert len(self.args.extra_env_vars[i].split('=')) == 2
-                    self.args.extra_env_vars[i] = self.args.extra_env_vars[i].strip()
+                for i in range(len(self.validated_args.extra_env_vars)):
+                    assert len(self.validated_args.extra_env_vars[i].split('=')) == 2
+                    self.validated_args.extra_env_vars[i] = self.args.extra_env_vars[i].strip()
             except AssertionError:
                 print('FATAL! Invalid --extra-env-vars. Aborting.')
                 return 1
         except AttributeError:
-            self.args.extra_env_vars = []
+            self.validated_args.extra_env_vars = []
 
         if self.args.action == 'laravel':
-            self.laravel_extra_env_vars = self.args.extra_env_vars
-            self.extra_env_vars = []
+            self.validated_args.laravel_extra_env_vars = self.validated_args.extra_env_vars
+            self.validated_args.extra_env_vars = []
         else:
-            self.extra_env_vars = self.args.extra_env_vars
+            self.validated_args.extra_env_vars = self.args.extra_env_vars
 
         return 0
 
@@ -903,11 +886,6 @@ class ArgValidator():
 
 
     def validate_args(self):
-        result = self.prepare_inventory()
-        if result != 0:
-            return result
-
-        self.fetch_ansible_facts()
         validate_methods = [
             'validate_ansible_runner_args',
             'validate_apache_args',

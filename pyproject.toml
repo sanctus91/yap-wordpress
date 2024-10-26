@@ -17,7 +17,7 @@ requires-python = ">=3.11"
 dependencies = [
     "ansible-core",
     "ansible-runner",
-    "ansible-directory-helper@git+https://github.com/saint-hilaire/ansible-directory-helper",
+    "ansible-directory-helper>=0.2",
     "requests>=2.32.3",
     "fqdn",
 ]
@@ -33,7 +33,7 @@ classifiers = [
 ]
 
 [project.scripts]
-lampsible = "lampsible:lampsible.main"
+lampsible = "lampsible:cli.main"
 
 [project.urls]
 Homepage = "https://github.com/saint-hilaire/lampsible"

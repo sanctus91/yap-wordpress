@@ -1,5 +1,6 @@
 import os
 from . import __version__
+from .helpers import *
 
 # Lampsible
 # ---------
@@ -35,10 +36,10 @@ SUPPORTED_ACTIONS = [
 # Script paths
 # ------------
 USER_HOME_DIR            = os.path.expanduser('~')
+PROJECT_DIR              = find_package_project_dir()
 DEFAULT_PRIVATE_DATA_DIR = os.path.join(USER_HOME_DIR, '.lampsible')
 # If the user does not supply a value, this will be overwritten by a path
 # inside the package installation, which we detect later on.
-DEFAULT_PROJECT_DIR      = ''
 
 # Apache
 # ------
