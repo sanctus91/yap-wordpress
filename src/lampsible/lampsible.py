@@ -140,9 +140,7 @@ def main():
     # PHP
     # ---
     parser.add_argument('-p', '--php-version', default=DEFAULT_PHP_VERSION,
-        help="the version of PHP to be installed, defaults to '{}'. Leave it blank to let Lampsible pick the right version based on your remote server.".format(
-            DEFAULT_PHP_VERSION
-        )
+        help="the version of PHP to be installed. Leave it blank to let Lampsible pick the right version based on your remote server."
     )
     # TODO
     # parser.add_argument('--php-my-admin', action='store_true')
@@ -223,7 +221,9 @@ def main():
     parser.add_argument('--ssh-key-file', '-i',  help='path to your private SSH key')
     parser.add_argument('--private-data-dir',
         default=DEFAULT_PRIVATE_DATA_DIR,
-        help="the \"private data directory\" that Ansible Runner will use. Default is '{}'. You can use this flag to pass an alternative value. However, it's best to just leave this blank. Be advised that Ansible Runner will write sensitive data here, like your private SSH key and passwords, but Lampsible will delete this directory when it finishes."
+        help="the \"private data directory\" that Ansible Runner will use. Default is '{}'. You can use this flag to pass an alternative value. However, it's best to just leave this blank. Be advised that Ansible Runner will write sensitive data here, like your private SSH key and passwords, but Lampsible will delete this directory when it finishes.".format(
+            DEFAULT_PRIVATE_DATA_DIR
+        )
     )
     # parser.add_argument('--project-dir', '-Z', default=DEFAULT_PROJECT_DIR)
 
