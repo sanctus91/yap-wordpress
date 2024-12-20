@@ -542,6 +542,12 @@ class ArgValidator():
             print('FATAL! Invalid PHP version!')
             return 1
 
+        # Temporary notice about manually adding support for PHP 8.4.
+        elif self.args.php_version == '8.4':
+            print('Warning! PHP 8.4 is the latest stable PHP version, but at the moment, no stable Ubuntu distribution includes that in its default repositories. What you are trying to do will not work without manually configuring your server\'s APT repositories. Run these commands first on the server:')
+            print('sudo apt install software-properties-common')
+            print('sudo add-apt-repository ppa:ondrej/php')
+
         # User passed a value, warn them if it's likely to not work.
         # TODO: In the future, we should have a global "non-interactive" flag,
         # based on which this can be handled better, for example, "interactive"
