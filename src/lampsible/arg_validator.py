@@ -4,6 +4,7 @@ from copy import copy
 from secrets import token_hex
 from warnings import warn
 from getpass import getpass
+from textwrap import dedent
 from requests import head as requests_head
 from fqdn import FQDN
 from ansible_runner import Runner, RunnerConfig
@@ -565,6 +566,20 @@ class ArgValidator():
         elif self.args.php_version not in SUPPORTED_PHP_VERSIONS:
             print('FATAL! Invalid PHP version!')
             return 1
+
+        # Temporary notice about manually adding support for PHP 8.4.
+        elif self.args.php_version == '8.4':
+            print(dedent("""
+                Warning! PHP 8.4 is the latest stable PHP version, but at the
+                moment, Ubuntu package repositories are still configured
+                for PHP 8.3.
+                What you are trying to do will not work without manually
+                configuring your server's APT repositories.
+
+                Run these commands on the server before proceeding:
+            """))
+            print('sudo apt install software-properties-common')
+            print('sudo add-apt-repository ppa:ondrej/php\n')
 
         # User passed a value, warn them if it's likely to not work.
         # TODO: In the future, we should have a global "non-interactive" flag,
