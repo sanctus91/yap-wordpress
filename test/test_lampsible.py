@@ -22,7 +22,6 @@ class TestLampsible(unittest.TestCase):
                 'test',
                 'tmp-private-data',
             ),
-            database_password='password'
         )
 
 
@@ -33,6 +32,30 @@ class TestLampsible(unittest.TestCase):
 
     def test_banner(self):
         self.assertIn(__version__, self.lampsible.banner)
+
+
+    def test_apache(self):
+        self.lampsible.set_action('apache')
+        self._do_test_run()
+
+
+    def test_ssl_selfsigned(self):
+        self.lampsible.set_action('apache')
+        self.lampsible.ssl_selfsigned = True
+        self._do_test_run()
+
+
+    def test_ssl_certbot(self):
+        self.lampsible.set_action('apache')
+        self.lampsible.ssl_certbot = True
+        self.lampsible.ssl_test_cert = True
+        self.lampsible.apache_server_admin = 'me@me.me'
+        self._do_test_run()
+
+
+    def _do_test_run(self):
+        result = self.lampsible.run()
+        self.assertEqual(result, 0)
 
 
     # TODO?

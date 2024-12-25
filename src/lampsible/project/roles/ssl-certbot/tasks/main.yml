@@ -6,4 +6,4 @@
     classic: true
 
 - name: Run Certbot
-  raw: "certbot --noninteractive --apache --agree-tos --email {{ email_for_ssl }} {{ certbot_domains_string }} {{ certbot_test_cert_string}}"
+  raw: "certbot --noninteractive --apache --agree-tos --email {{ email_for_ssl }} {{ certbot_domains_string }} {{ '--test-cert' if ssl_test_cert else '' }}"

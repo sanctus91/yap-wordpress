@@ -5,7 +5,7 @@ from secrets import token_hex
 from warnings import warn
 from getpass import getpass
 from requests import head as requests_head
-from fqdn import FQDN
+# from fqdn import FQDN
 from ansible_runner import Runner, RunnerConfig
 from ansible_directory_helper.inventory_file import InventoryFile
 from lampsible.constants import *
@@ -46,6 +46,7 @@ class ArgValidator():
         return self.apache_vhosts
 
 
+    # TODO: No more need for this, get rid of it.
     def get_apache_custom_conf_name(self):
         try:
             return self.apache_custom_conf_name
@@ -100,6 +101,7 @@ class ArgValidator():
         return auth_vars
 
 
+    # TODO: No more need for this, get rid of it.
     def get_apache_allow_override(self):
         return (
             self.validated_args.action in ['laravel', 'drupal']
@@ -361,6 +363,8 @@ class ArgValidator():
         return 0
 
 
+    # TODO: Most of this, if not all of it, is being moved to Lampsible.set_apache_args.
+    # Refactor this.
     def validate_apache_args(self):
 
         server_name = self.validated_args.web_host
@@ -483,6 +487,8 @@ class ArgValidator():
         return 0
 
 
+    # TODO: Much of this is being moved to Lampsible constructor and _update_env.
+    # Refactor this.
     def validate_ssl_args(self):
 
         if self.args.ssl_certbot:

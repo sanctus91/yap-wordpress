@@ -233,7 +233,7 @@ def main():
     # ---
     parser.add_argument('--email-for-ssl', help="the email address that will be passed to Certbot. If left blank, the value of '--apache-server-admin' will be used instead.")
     parser.add_argument('--domains-for-ssl', help="a comma separated list of domains that will be passed to Certbot. If left blank, Lampsible will figure out what to use based on your host and action.")
-    parser.add_argument('--test-cert', action='store_true', help="Pass this flag along with '--ssl-certbot' if you are testing and want to avoid being rate limited by Let's Encrypt.")
+    parser.add_argument('--ssl-test-cert', action='store_true', help="Pass this flag along with '--ssl-certbot' if you are testing and want to avoid being rate limited by Let's Encrypt.")
 
     # Misc
     # ----
