@@ -83,6 +83,20 @@ lampsible someuser@192.168.123.123 lamp-stack \
 
 Run `lampsible --help` for a full list of options.
 
+## Running unit tests
+
+Lampsible has basic unit tests since version 2. However, there are some caveats. They are not true unit tests, more
+like some kind of integration tests. They require access to a real remote server, and will run real Ansible playbooks
+against that server to perform various test installations, so beware! This server should be unimportant and unsensitive
+in that regard.
+
+It is also a bit unconventional to pass custom arguments to unit tests. But the tests make use of the
+environment variable `LAMPSIBLE_REMOTE`, so you can do something like this:
+```
+export LAMPSIBLE_REMOTE="you@yourserver.com"; python -m unittest
+```
+
+
 ## Contributing 
 
 Please do! I'd be more than happy to see Issues, Pull Requests and any other kind of feedback ;-)
