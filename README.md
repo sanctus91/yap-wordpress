@@ -87,8 +87,8 @@ Run `lampsible --help` for a full list of options.
 
 Lampsible has basic unit tests since version 2. However, there are some caveats. They are not true unit tests, more
 like some kind of integration tests. They require access to a real remote server, and will run real Ansible playbooks
-against that server to perform various test installations, so beware! This server should be unimportant and unsensitive
-in that regard.
+against that server to perform various test installations, with insecure passwords, so beware!
+This server should be unimportant and unsensitive in that regard.
 
 It is also a bit unconventional to pass custom arguments to unit tests. But the tests make use of the
 environment variable `LAMPSIBLE_REMOTE`, so you can do something like this:
@@ -96,6 +96,32 @@ environment variable `LAMPSIBLE_REMOTE`, so you can do something like this:
 export LAMPSIBLE_REMOTE="you@yourserver.com"; python -m unittest
 ```
 
+Finally, because they are not true unit tests, their results should be taken with a grain of salt.
+Even if the tests pass, it does not guarantee that the results on the remote server
+are exactly what you expect, even if it's quite likely. It only guarantees that the Lampsible's
+`run` method returned a status code of 0. Therefore, you should inspect the console output printed by Ansible
+during playbook execution and the actual results on your server.
+There is admittedly much room for improvement in this, but for the time being,
+these tests are still quite convenient for testing individual features of the
+Lampsible library without having to run the actual CLI tool.
+
+You can run single tests individually too. For example, to run only the PHP tests:
+```
+export LAMPSIBLE_REMOTE="you@yourserver.com"; python -m unittest test.test_lampsible.TestLampsible.test_simple_php
+```
+
+In fact, this is the only feasible way to run the tests, running them one at a time,
+and rebuilding the server between each test case. 
+
+### Testing the Laravel app
+
+The way this works, you have to "bring your own Laravel app". The tests need a `LAMPSIBLE_LARAVEL_NAME`,
+which is the name of the app, and a `LAMPSIBLE_LARAVEL_PATH`, which is Lampsible's `--app-build-path`,
+which in turn is a zip or tar archive of your app, with Composer dependencies already installed,
+but without a configured .env file, because Lampsible will overwrite it.
+
+So you need to set the two environment variables similar to the example above. If you don't,
+the test will be skipped.
 
 ## Contributing 
 
