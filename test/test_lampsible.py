@@ -63,6 +63,26 @@ class TestLampsible(unittest.TestCase):
         self._do_test_run()
 
 
+    def test_simple_php(self):
+        self.lampsible.set_action('php')
+        self._do_test_run()
+
+
+    def test_full_php(self):
+        self.lampsible.set_action('php')
+        self.lampsible.php_extensions = [
+            'php-mysql',
+            'php-xml',
+            'php-gd',
+            'php-curl',
+            'php-mbstring',
+        ]
+        self.lampsible.composer_packages = ['drush/drush', 'guzzlehttp/guzzle']
+        self.lampsible.composer_project = 'drupal/recommended-project'
+        self.lampsible.composer_working_directory = '/var/www/html/test-app'
+        self._do_test_run()
+
+
     def _do_test_run(self):
         result = self.lampsible.run()
         self.assertEqual(result, 0)

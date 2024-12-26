@@ -123,6 +123,7 @@ class ArgValidator():
         return '--test-cert' if self.validated_args.test_cert else ''
 
 
+    # TODO: Deprecate this in favor of Lampsible._update_env
     def get_extravars_dict(self):
         extravars = {
             'web_host': self.validated_args.web_host,
@@ -520,6 +521,8 @@ class ArgValidator():
         return 0
 
 
+    # TODO: Some of this is moving to the Lampsible class as well.
+    # Refactor this.
     def validate_php_args(self):
 
         if self.args.action in [

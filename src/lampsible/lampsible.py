@@ -22,7 +22,7 @@ class Lampsible:
             apache_server_admin=DEFAULT_APACHE_SERVER_ADMIN,
             database_username=None,
             database_name=None, database_host=None, database_system_user=None,
-            database_system_host=None, php_version=None, site_title=None,
+            database_system_host=None, php_version=DEFAULT_PHP_VERSION, site_title=None,
             admin_username=None, admin_email=None, wordpress_version=None,
             wordpress_locale=None, joomla_version=None,
             joomla_admin_full_name=None, drupal_profile=None, app_name=None,
@@ -34,8 +34,8 @@ class Lampsible:
             ssl_selfsigned=False, remote_sudo_password=None,
             ssh_key_file=None, apache_vhost_name=DEFAULT_APACHE_VHOST_NAME,
             apache_document_root=DEFAULT_APACHE_DOCUMENT_ROOT, database_password=None,
-            database_table_prefix=DEFAULT_DATABASE_TABLE_PREFIX, php_extensions=None,
-            composer_packages=None, composer_working_directory=None,
+            database_table_prefix=DEFAULT_DATABASE_TABLE_PREFIX, php_extensions=[],
+            composer_packages=[], composer_working_directory=None,
             composer_project=None, admin_password=None,
             # TODO: Deprecate this.
             wordpress_insecure_allow_xmlrpc=False,
@@ -104,6 +104,12 @@ class Lampsible:
         self.database_name         = database_name
         self.database_host         = database_host
         self.database_table_prefix = database_table_prefix
+
+        self.php_version                = php_version
+        self.php_extensions             = php_extensions
+        self.composer_packages          = composer_packages
+        self.composer_project           = composer_project
+        self.composer_working_directory = composer_working_directory
         # TODO: All that other stuff...
         #     # Maybe a little better, but the setters need to each
         #     # be implemented.
@@ -118,7 +124,6 @@ class Lampsible:
         # self.database_host = database_host
         # self.database_system_user = database_system_user
         # self.database_system_host = database_system_host
-        # self.php_version = php_version
         # self.site_title = site_title
         # self.admin_username = admin_username
         # self.admin_email = admin_email
@@ -198,6 +203,10 @@ class Lampsible:
 
             self.apache_custom_conf_name = 'ssl-params'
 
+        # TODO: Do this conditionally, only for actions where we need it?
+        if not self.composer_working_directory:
+            self.composer_working_directory = self.apache_document_root
+
 
     def get_apache_allow_override(self):
         return (
@@ -229,6 +238,9 @@ class Lampsible:
 
 
     def _update_env(self):
+        # TODO: Build this list conditionally, based on the action,
+        # to avoid setting unnecessary variables. See ArgValidator.get_extravars_dict,
+        # which we must also deprecate in favor of this method here.
         extravars = [
             'web_host',
             'apache_vhosts',
@@ -250,6 +262,11 @@ class Lampsible:
             'database_name',
             'database_host',
             'database_table_prefix',
+            'php_version',
+            'php_extensions',
+            'composer_packages',
+            'composer_project',
+            'composer_working_directory',
             'extra_packages',
             'extra_env_vars',
             'insecure_skip_fail2ban',
