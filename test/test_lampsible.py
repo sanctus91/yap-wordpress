@@ -51,9 +51,7 @@ class TestLampsible(unittest.TestCase):
 
     def test_ssl_certbot(self):
         self.lampsible.set_action('apache')
-        self.lampsible.ssl_certbot = True
-        self.lampsible.ssl_test_cert = True
-        self.lampsible.apache_server_admin = 'me@me.me'
+        self._prepare_test_certbot()
         self._do_test_run()
 
 
@@ -83,9 +81,29 @@ class TestLampsible(unittest.TestCase):
         self._do_test_run()
 
 
+    def test_extra_apt_packages(self):
+        self.lampsible.set_action('apache')
+        self.lampsible.extra_packages = ['tmux', 'neofetch']
+        self._do_test_run()
+
+
+    def test_lamp_stack(self):
+        self.lampsible.set_action('lamp-stack')
+        self.lampsible.database_name = 'test_database'
+        self.lampsible.php_extensions = ['php-mysql', 'php-xml']
+        self._prepare_test_certbot()
+        self._do_test_run()
+
+
     def _do_test_run(self):
         result = self.lampsible.run()
         self.assertEqual(result, 0)
+
+
+    def _prepare_test_certbot(self):
+        self.lampsible.ssl_certbot = True
+        self.lampsible.ssl_test_cert = True
+        self.lampsible.apache_server_admin = 'me@me.me'
 
 
     # TODO?
