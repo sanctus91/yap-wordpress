@@ -34,7 +34,7 @@ class Lampsible:
             ssl_selfsigned=False, remote_sudo_password=None,
             ssh_key_file=None, apache_vhost_name=DEFAULT_APACHE_VHOST_NAME,
             apache_document_root=DEFAULT_APACHE_DOCUMENT_ROOT, database_password=None,
-            database_table_prefix=None, php_extensions=None,
+            database_table_prefix=DEFAULT_DATABASE_TABLE_PREFIX, php_extensions=None,
             composer_packages=None, composer_working_directory=None,
             composer_project=None, admin_password=None,
             # TODO: Deprecate this.
@@ -99,7 +99,11 @@ class Lampsible:
         self.apache_custom_conf_name = apache_custom_conf_name
 
         # ...
-        self.database_password = database_password
+        self.database_username     = database_username
+        self.database_password     = database_password
+        self.database_name         = database_name
+        self.database_host         = database_host
+        self.database_table_prefix = database_table_prefix
         # TODO: All that other stuff...
         #     # Maybe a little better, but the setters need to each
         #     # be implemented.
@@ -237,6 +241,15 @@ class Lampsible:
             'certbot_domains_string',
             'ssl_test_cert',
             'ssl_selfsigned',
+            'database_username',
+            # TODO: Ansible Runner has a dedicated feature for dealing
+            # with passwords. Likely we'll have to implement support
+            # for that in ansible-directory-helper.
+            # For the time being, however, treat it as an extravar.
+            'database_password',
+            'database_name',
+            'database_host',
+            'database_table_prefix',
             'extra_packages',
             'extra_env_vars',
             'insecure_skip_fail2ban',

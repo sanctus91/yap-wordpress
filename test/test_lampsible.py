@@ -2,6 +2,7 @@ import os
 import unittest
 from lampsible import __version__
 from lampsible.lampsible import Lampsible
+from lampsible.constants import *
 
 class TestLampsible(unittest.TestCase):
 
@@ -22,6 +23,9 @@ class TestLampsible(unittest.TestCase):
                 'test',
                 'tmp-private-data',
             ),
+            database_username=DEFAULT_DATABASE_USERNAME,
+            database_password='password',
+            database_host=DEFAULT_DATABASE_HOST,
         )
 
 
@@ -50,6 +54,12 @@ class TestLampsible(unittest.TestCase):
         self.lampsible.ssl_certbot = True
         self.lampsible.ssl_test_cert = True
         self.lampsible.apache_server_admin = 'me@me.me'
+        self._do_test_run()
+
+
+    def test_mysql(self):
+        self.lampsible.set_action('mysql')
+        self.lampsible.database_name = 'test_database'
         self._do_test_run()
 
 
