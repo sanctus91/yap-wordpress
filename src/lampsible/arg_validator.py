@@ -717,6 +717,8 @@ class ArgValidator():
         return 0
 
 
+    # TODO: Most of this is also moving to Lampsible.set_action.
+    # Refactor this.
     def validate_drupal_args(self):
 
         if self.args.action != 'drupal':

@@ -28,8 +28,8 @@ class Lampsible:
             wordpress_locale=DEFAULT_WORDPRESS_LOCALE,
             joomla_version=DEFAULT_JOOMLA_VERSION,
             joomla_admin_full_name=DEFAULT_JOOMLA_ADMIN_FULL_NAME,
-            drupal_profile=None, app_name=None,
-                                 # TODO: Deprecate this one
+            drupal_profile=DEFAULT_DRUPAL_PROFILE,
+            app_name=None,
             app_build_path=None,
             # TODO: For now, for back-compat, False by default, but
             # it should actually be True.
@@ -123,6 +123,8 @@ class Lampsible:
 
         self.joomla_version = joomla_version
         self.joomla_admin_full_name = joomla_admin_full_name
+
+        self.drupal_profile = drupal_profile
         # TODO: All that other stuff...
         #     # Maybe a little better, but the setters need to each
         #     # be implemented.
@@ -165,6 +167,23 @@ class Lampsible:
                 'php-gd',
                 'php-mysql',
             ]
+        elif action == 'drupal':
+            required_php_extensions = [
+                'php-mysql',
+                'php-xml',
+                'php-gd',
+                'php-curl',
+                'php-mbstring',
+            ]
+            self.composer_project = 'drupal/recommended-project'
+            if not self.composer_working_directory:
+                self.composer_working_directory = '{}/drupal'.format(
+                    self.apache_document_root
+                )
+            try:
+                self.composer_packages.append('drush/drush')
+            except AttributeError:
+                self.composer_packages = ['drush/drush']
         else:
             required_php_extensions = []
         for ext in required_php_extensions:
@@ -305,6 +324,7 @@ class Lampsible:
             'wordpress_insecure_allow_xmlrpc',
             'joomla_version',
             'joomla_admin_full_name',
+            'drupal_profile',
             'ssl_certbot',
             'email_for_ssl',
             'certbot_domains_string',

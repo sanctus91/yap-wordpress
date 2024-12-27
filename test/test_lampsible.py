@@ -111,6 +111,14 @@ class TestLampsible(unittest.TestCase):
         self._do_test_run()
 
 
+    def test_drupal(self):
+        self.lampsible.set_action('drupal')
+        self.lampsible.database_name = 'drupal'
+        self.lampsible.admin_password = 'password'
+        self._prepare_test_certbot()
+        self._do_test_run()
+
+
     def _do_test_run(self):
         result = self.lampsible.run()
         self.assertEqual(result, 0)
