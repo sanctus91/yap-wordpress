@@ -8,6 +8,7 @@
     mode: '0755'
   when: ansible_facts['distribution'] != 'Ubuntu' or ansible_facts['distribution_major_version'] | int < 24
 
+# TODO
 # TODO: See GitHub #23, Redmine #1119. These 2 blocks are a rather ugly workaround
 # for having to support Ubuntu 24 and also older versions of Python and Ansible.
 # This will be improved soon, by upgrading the required Python and Ansible

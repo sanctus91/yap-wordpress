@@ -1,7 +1,6 @@
 import os
 from re import match
 from copy import copy, deepcopy
-from secrets import token_hex
 from warnings import warn
 from getpass import getpass
 from requests import head as requests_head
@@ -59,46 +58,6 @@ class ArgValidator():
             return self.wordpress_url
         except AttributeError:
             return ''
-
-
-    # DEPRECATED
-    def get_wordpress_auth_vars(self):
-        auth_var_names = [
-            'auth_key',
-            'secure_auth_key',
-            'logged_in_key',
-            'nonce_key',
-            'auth_salt',
-            'secure_auth_salt',
-            'logged_in_salt',
-            'nonce_salt',
-        ]
-        auth_vars = {}
-
-        for var in auth_var_names:
-            must_generate = False
-            warn_user     = False
-
-            if not getattr(self.args, 'wordpress_{}'.format(var)):
-                must_generate = True
-            elif len(getattr(self.args, 'wordpress_{}'.format(var))) < 32:
-                must_generate = True
-                warn_user     = True
-
-            if must_generate:
-                auth_vars[var.upper()] = token_hex(64)
-            else:
-                auth_vars[var.upper()] = getattr(
-                    self.args,
-                    'wordpress_{}'.format(var)
-                )
-
-            if warn_user:
-                print('\nThe value you passed for {} is too short! I will automatically generate a value for you, and use that. If in doubt, you should leave this argument blank, to use automatically generated values. See the file wp-config.php on your server.'.format(
-                    self.var_name_to_cli_arg('wordpress_{}'.format(var))
-                ))
-
-        return auth_vars
 
 
     # TODO: No more need for this, get rid of it.
@@ -180,16 +139,9 @@ class ArgValidator():
         if self.args.action == 'wordpress':
             extravars['wordpress_version'] = self.validated_args.wordpress_version
             extravars['wordpress_locale'] = self.validated_args.wordpress_locale
-
-            # TODO: This should be deprecated in favor of
-            # letting WP-CLI handlethese.
-            extravars['wordpress_auth_vars'] = self.get_wordpress_auth_vars()
-
             extravars['wordpress_insecure_allow_xmlrpc'] = \
                 self.validated_args.wordpress_insecure_allow_xmlrpc
             extravars['wordpress_url'] = self.get_wordpress_url()
-            extravars['wordpress_manual_install'] = \
-                self.validated_args.wordpress_manual_install
 
         elif self.args.action == 'joomla':
             # TODO: We could do something like 'cms_version' instead.
@@ -568,6 +520,9 @@ class ArgValidator():
                 self.ansible_facts['ubuntu_version']
             ))
 
+        # TODO: This part especially is moving to Lampsible.set_action.
+        # But there, we'll make use of the fact that we don't need the PHP version.
+        # 'apt install php-mysql' works just as well as 'apt install php8.3-mysql'
         if self.args.php_extensions:
             extensions = [
                 extension.strip()
@@ -643,19 +598,6 @@ class ArgValidator():
             print('\nInvalid WordPress version! Leave --wordpress-version blank to default to \'{}\''.format(DEFAULT_WORDPRESS_VERSION))
             return 1
 
-        # TODO: These are for backwards compatibility, in case a user still uses
-        # the deprecated flag instead of the one valid for all CMS.
-        # Support for deprecated flags will be dropped in a future version.
-        if self.args.wordpress_site_title and not self.args.site_title:
-            self.args.site_title = self.args.wordpress_site_title
-        if self.args.wordpress_admin_username and not self.args.admin_username:
-            self.args.admin_username = self.args.wordpress_admin_username
-        if self.args.wordpress_admin_email and not self.args.admin_email:
-            self.args.admin_email = self.args.wordpress_admin_email
-        if self.args.wordpress_admin_password and not self.args.admin_password:
-            self.args.admin_password = self.args.wordpress_admin_password
-        ####
-
         self.handle_defaults([
             {
                 'arg_name': 'site_title',
@@ -686,6 +628,7 @@ class ArgValidator():
                 True
             )
 
+        # TODO: This is moving to Lampsible._update_env.
         if self.args.ssl_certbot:
             if self.web_host[:4] == 'www.':
                 www_domain = self.web_host

@@ -188,28 +188,6 @@ def main():
         action='store_true',
         help="Pass this flag if you want your WordPress site's insecure(!) endpoint xmlrpc.php to be reachable. This will make your site vulnerable to various exploits, and you really shouldn't do this if you don't have a good reason for this."
     )
-    # NOTE: Manually installing WordPress and passing the authentication salts
-    # will be deprecated.
-    parser.add_argument('--wordpress-manual-install', action='store_true',
-        help="Pass this flag if you prefer to complete the \"Famous 5 Minute WordPress Install\" manually. This is not advised, and will be deprecated."
-    )
-    parser.add_argument('--wordpress-auth-key', help="deprecated")
-    parser.add_argument('--wordpress-secure-auth-key', help="deprecated")
-    parser.add_argument('--wordpress-logged-in-key', help="deprecated")
-    parser.add_argument('--wordpress-nonce-key', help="deprecated")
-    parser.add_argument('--wordpress-auth-salt', help="deprecated")
-    parser.add_argument('--wordpress-secure-auth-salt', help="deprecated")
-    parser.add_argument('--wordpress-logged-in-salt', help="deprecated")
-    parser.add_argument('--wordpress-nonce-salt', help="deprecated")
-    parser.add_argument('--wordpress-site-title',
-        help="deprecated, use '--site-title' instead."
-    )
-    parser.add_argument('--wordpress-admin-username',
-        help="deprecated, use '--admin-username' instead"
-    )
-    parser.add_argument('--wordpress-admin-email',
-        help="deprecated, use '--admin-email' instead"
-    )
     # TODO
     # parser.add_argument('--wordpress-skip-content', action='store_true')
 

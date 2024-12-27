@@ -19,7 +19,7 @@
         - apache2
         - php
         - composer
-        - "{{ 'wordpress-manual' if wordpress_manual_install else 'wordpress-cli' }}"
+        - wordpress
 
     - include_role:
         name: ssl-selfsigned
@@ -33,11 +33,6 @@
     - include_role:
         name: ssl-certbot
       when: ssl_certbot
-
-    - pause:
-        minutes: 5
-        prompt: "Please navigate to your site right now to complete the 'Famous 5 Minute WordPress Installation'. This is required for the next step of the script to suceed (setting some configurations in the database), and it's also important for security reasons that you do this right away. Keeping in line with WordPress tradition, you have exactly 5 minutes to complete this step. (Also, please don't interrupt this step with Ctrl+C, because Ansible Runner has some issues with handling KeyboardInterrupts - see https://github.com/ansible/ansible-runner/issues/756 or also their issue 1075."
-      when: ssl_certbot and wordpress_manual_install
 
     - include_role:
         name: domain-for-wordpress

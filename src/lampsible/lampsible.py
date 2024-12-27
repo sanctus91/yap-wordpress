@@ -22,9 +22,11 @@ class Lampsible:
             apache_server_admin=DEFAULT_APACHE_SERVER_ADMIN,
             database_username=None,
             database_name=None, database_host=None, database_system_user=None,
-            database_system_host=None, php_version=DEFAULT_PHP_VERSION, site_title=None,
-            admin_username=None, admin_email=None, wordpress_version=None,
-            wordpress_locale=None, joomla_version=None,
+            database_system_host=None, php_version=DEFAULT_PHP_VERSION, site_title=DEFAULT_SITE_TITLE,
+            admin_username=DEFAULT_ADMIN_USERNAME, admin_email=DEFAULT_ADMIN_EMAIL,
+            wordpress_version=DEFAULT_WORDPRESS_VERSION,
+            wordpress_locale=DEFAULT_WORDPRESS_LOCALE,
+            joomla_version=None,
             joomla_admin_full_name=None, drupal_profile=None, app_name=None,
                                  # TODO: Deprecate this one
             app_build_path=None,
@@ -46,10 +48,8 @@ class Lampsible:
 
             # These are from arg_validator. In v1, arg_validator generates these
             # variables, and passes them into extravars. We'll still need them here.
-            apache_vhosts=None, apache_custom_conf_name='',
-            # TODO: We shouldn't need these, but don't forget it for now.
-            # certbot_domains_string, certbot_test_cert_string
-            wordpress_auth_vars=None,
+            apache_custom_conf_name='',
+
             # TODO: I don't want to have to use this one...
             wordpress_url=None,
             # TODO: Also don't know about this one...
@@ -110,6 +110,10 @@ class Lampsible:
         self.composer_packages          = composer_packages
         self.composer_project           = composer_project
         self.composer_working_directory = composer_working_directory
+
+        self.wordpress_version = wordpress_version
+        self.wordpress_locale  = wordpress_locale
+        self.wordpress_insecure_allow_xmlrpc  = wordpress_insecure_allow_xmlrpc
         # TODO: All that other stuff...
         #     # Maybe a little better, but the setters need to each
         #     # be implemented.
@@ -124,7 +128,10 @@ class Lampsible:
         # self.database_host = database_host
         # self.database_system_user = database_system_user
         # self.database_system_host = database_system_host
-        # self.site_title = site_title
+        self.site_title     = site_title
+        self.admin_username = admin_username
+        self.admin_password = admin_password
+        self.admin_email    = admin_email
         # self.admin_username = admin_username
         # self.admin_email = admin_email
         # self.
@@ -138,6 +145,19 @@ class Lampsible:
 
     def set_action(self, action):
         self.action = action
+
+        if action == 'lamp-stack':
+            required_php_extensions = ['php-mysql']
+        if action == 'wordpress':
+            required_php_extensions = ['php-mysql']
+            if self.database_table_prefix == DEFAULT_DATABASE_TABLE_PREFIX:
+                self.database_table_prefix = 'wp_'
+        else:
+            required_php_extensions = []
+        for ext in required_php_extensions:
+            if ext not in self.php_extensions:
+                self.php_extensions.append(ext)
+
         self.runner_config.playbook = '{}.yml'.format(self.action)
 
 
@@ -248,11 +268,6 @@ class Lampsible:
             'apache_document_root',
             'apache_server_admin',
             'apache_custom_conf_name',
-            'ssl_certbot',
-            'email_for_ssl',
-            'certbot_domains_string',
-            'ssl_test_cert',
-            'ssl_selfsigned',
             'database_username',
             # TODO: Ansible Runner has a dedicated feature for dealing
             # with passwords. Likely we'll have to implement support
@@ -267,6 +282,19 @@ class Lampsible:
             'composer_packages',
             'composer_project',
             'composer_working_directory',
+            'wordpress_version',
+            'wordpress_locale',
+            'wordpress_url',
+            'wordpress_insecure_allow_xmlrpc',
+            'site_title',
+            'admin_username',
+            'admin_password',
+            'admin_email',
+            'ssl_certbot',
+            'email_for_ssl',
+            'certbot_domains_string',
+            'ssl_test_cert',
+            'ssl_selfsigned',
             'extra_packages',
             'extra_env_vars',
             'insecure_skip_fail2ban',
@@ -277,8 +305,19 @@ class Lampsible:
                     value = self.web_host
                 else:
                     value = DEFAULT_APACHE_SERVER_NAME
+
+            elif varname == 'wordpress_url':
+                if not self.ssl_certbot or self.web_host[:4] == 'www.':
+                    value = self.web_host
+                else:
+                    value = 'www.{}'.format(self.web_host)
+
+                if value not in self.domains_for_ssl:
+                    self.domains_for_ssl.append(value)
+
             elif varname == 'certbot_domains_string':
-                value = '-d {}'.format('-d '.join(self.domains_for_ssl))
+                value = '-d {}'.format(' -d '.join(self.domains_for_ssl))
+
             else:
                 value = getattr(self, varname)
 
