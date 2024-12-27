@@ -103,6 +103,14 @@ class TestLampsible(unittest.TestCase):
         self._do_test_run()
 
 
+    def test_joomla(self):
+        self.lampsible.set_action('joomla')
+        self.lampsible.database_name = 'joomla'
+        self.lampsible.admin_password = 'passwordpassword'
+        self._prepare_test_certbot()
+        self._do_test_run()
+
+
     def _do_test_run(self):
         result = self.lampsible.run()
         self.assertEqual(result, 0)

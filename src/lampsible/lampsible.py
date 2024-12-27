@@ -26,8 +26,9 @@ class Lampsible:
             admin_username=DEFAULT_ADMIN_USERNAME, admin_email=DEFAULT_ADMIN_EMAIL,
             wordpress_version=DEFAULT_WORDPRESS_VERSION,
             wordpress_locale=DEFAULT_WORDPRESS_LOCALE,
-            joomla_version=None,
-            joomla_admin_full_name=None, drupal_profile=None, app_name=None,
+            joomla_version=DEFAULT_JOOMLA_VERSION,
+            joomla_admin_full_name=DEFAULT_JOOMLA_ADMIN_FULL_NAME,
+            drupal_profile=None, app_name=None,
                                  # TODO: Deprecate this one
             app_build_path=None,
             # TODO: For now, for back-compat, False by default, but
@@ -111,9 +112,17 @@ class Lampsible:
         self.composer_project           = composer_project
         self.composer_working_directory = composer_working_directory
 
+        self.site_title     = site_title
+        self.admin_username = admin_username
+        self.admin_password = admin_password
+        self.admin_email    = admin_email
+
         self.wordpress_version = wordpress_version
         self.wordpress_locale  = wordpress_locale
         self.wordpress_insecure_allow_xmlrpc  = wordpress_insecure_allow_xmlrpc
+
+        self.joomla_version = joomla_version
+        self.joomla_admin_full_name = joomla_admin_full_name
         # TODO: All that other stuff...
         #     # Maybe a little better, but the setters need to each
         #     # be implemented.
@@ -128,10 +137,6 @@ class Lampsible:
         # self.database_host = database_host
         # self.database_system_user = database_system_user
         # self.database_system_host = database_system_host
-        self.site_title     = site_title
-        self.admin_username = admin_username
-        self.admin_password = admin_password
-        self.admin_email    = admin_email
         # self.admin_username = admin_username
         # self.admin_email = admin_email
         # self.
@@ -148,10 +153,18 @@ class Lampsible:
 
         if action == 'lamp-stack':
             required_php_extensions = ['php-mysql']
-        if action == 'wordpress':
+        elif action == 'wordpress':
             required_php_extensions = ['php-mysql']
             if self.database_table_prefix == DEFAULT_DATABASE_TABLE_PREFIX:
                 self.database_table_prefix = 'wp_'
+        elif action == 'joomla':
+            required_php_extensions = [
+                'php-simplexml',
+                'php-dom',
+                'php-zip',
+                'php-gd',
+                'php-mysql',
+            ]
         else:
             required_php_extensions = []
         for ext in required_php_extensions:
@@ -282,14 +295,16 @@ class Lampsible:
             'composer_packages',
             'composer_project',
             'composer_working_directory',
-            'wordpress_version',
-            'wordpress_locale',
-            'wordpress_url',
-            'wordpress_insecure_allow_xmlrpc',
             'site_title',
             'admin_username',
             'admin_password',
             'admin_email',
+            'wordpress_version',
+            'wordpress_locale',
+            'wordpress_url',
+            'wordpress_insecure_allow_xmlrpc',
+            'joomla_version',
+            'joomla_admin_full_name',
             'ssl_certbot',
             'email_for_ssl',
             'certbot_domains_string',
