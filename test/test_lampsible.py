@@ -119,6 +119,35 @@ class TestLampsible(unittest.TestCase):
         self._do_test_run()
 
 
+    def test_extra_env_vars(self):
+        self.lampsible.set_action('apache')
+        self.lampsible.extra_env_vars = {
+            'HELLO': 'world',
+            'FOO'  : 'bar',
+
+        }
+        self._do_test_run()
+
+
+    def test_laravel(self):
+        try:
+            app_build_path = os.path.abspath(
+                os.environ['LAMPSIBLE_LARAVEL_PATH']
+            )
+            app_name = os.environ['LAMPSIBLE_LARAVEL_NAME']
+        except KeyError:
+            self.skipTest('Got no LAMPSIBLE_LARAVEL_PATH and LAMPSIBLE_LARAVEL_NAME')
+        self.lampsible.set_action('laravel')
+        self.lampsible.database_name = 'laravel'
+        self.lampsible.app_build_path = app_build_path
+        self.lampsible.app_name = app_name
+        self.lampsible.extra_env_vars = {
+            'I_SHOULD_BE_IN': '.env-and-not-in-envvars'
+        }
+        self._prepare_test_certbot()
+        self._do_test_run()
+
+
     def _do_test_run(self):
         result = self.lampsible.run()
         self.assertEqual(result, 0)

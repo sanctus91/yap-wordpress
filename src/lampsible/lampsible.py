@@ -42,10 +42,11 @@ class Lampsible:
             composer_project=None, admin_password=None,
             # TODO: Deprecate this.
             wordpress_insecure_allow_xmlrpc=False,
-            app_local_env=None,
-            laravel_artisan_commands=None, email_for_ssl=None,
+            app_local_env=False,
+            laravel_artisan_commands=DEFAULT_LARAVEL_ARTISAN_COMMANDS,
+            email_for_ssl=None,
             domains_for_ssl=[], ssl_test_cert=False, insecure_skip_fail2ban=False,
-            extra_packages=[], extra_env_vars=[],
+            extra_packages=[], extra_env_vars={},
 
             # These are from arg_validator. In v1, arg_validator generates these
             # variables, and passes them into extravars. We'll still need them here.
@@ -94,7 +95,6 @@ class Lampsible:
         self.email_for_ssl   = email_for_ssl
         self.domains_for_ssl = domains_for_ssl
 
-        self.app_name = app_name
         # TODO: Deprecate this.
         self.wordpress_insecure_allow_xmlrpc = wordpress_insecure_allow_xmlrpc
         self.apache_custom_conf_name = apache_custom_conf_name
@@ -125,6 +125,11 @@ class Lampsible:
         self.joomla_admin_full_name = joomla_admin_full_name
 
         self.drupal_profile = drupal_profile
+
+        self.app_name = app_name
+        self.app_build_path = app_build_path
+        self.laravel_artisan_commands = laravel_artisan_commands
+        self.app_local_env = app_local_env
         # TODO: All that other stuff...
         #     # Maybe a little better, but the setters need to each
         #     # be implemented.
@@ -184,6 +189,12 @@ class Lampsible:
                 self.composer_packages.append('drush/drush')
             except AttributeError:
                 self.composer_packages = ['drush/drush']
+        elif action == 'laravel':
+            required_php_extensions = [
+                'php-mysql',
+                'php-xml',
+                'php-mbstring',
+            ]
         else:
             required_php_extensions = []
         for ext in required_php_extensions:
@@ -325,6 +336,11 @@ class Lampsible:
             'joomla_version',
             'joomla_admin_full_name',
             'drupal_profile',
+            'app_name',
+            'app_build_path',
+            'app_source_root',
+            'laravel_artisan_commands',
+            'app_local_env',
             'ssl_certbot',
             'email_for_ssl',
             'certbot_domains_string',
@@ -352,6 +368,32 @@ class Lampsible:
 
             elif varname == 'certbot_domains_string':
                 value = '-d {}'.format(' -d '.join(self.domains_for_ssl))
+
+            # This lets us pass extra_env_vars to Lampsible in the more sensible dictionary format,
+            # while still using them in the more convenient list format.
+            elif varname == 'extra_env_vars':
+                value = [
+                    '{}={}'.format(
+                        key,
+                        val
+                    ) for key, val in self.extra_env_vars.items()
+                ]
+
+                # And this is to make sure that if we're installing a Laravel
+                # app, we write the variables to the app's .env file, and not
+                # Apache's envvars file.
+                if self.action == 'laravel':
+                    self.private_data_helper.set_extravar(
+                        'laravel_extra_env_vars',
+                        value
+                    )
+                    value = []
+
+            elif varname == 'app_source_root':
+                value = '{}/{}'.format(
+                    DEFAULT_APACHE_DOCUMENT_ROOT,
+                    self.app_name
+                )
 
             else:
                 value = getattr(self, varname)
