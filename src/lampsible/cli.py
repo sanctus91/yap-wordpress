@@ -121,6 +121,7 @@ def main():
 
     # SSL
     # ---
+    # TODO
     # TODO: Deprecate this one.
     parser.add_argument('-s', '--ssl-certbot', action='store_true',
         help="Pass this flag to use Certbot to fully enable SSL for your site. You should also pass a valid email address to '--apache-server-admin', or alternatively to '--email-for-ssl'. If you are simply testing, pass '--test-cert' as well, to avoid being rate limited by Let's Encrypt."
@@ -237,7 +238,6 @@ def main():
     tmp_rc = RunnerConfig(
         private_data_dir=tmp_args.private_data_dir,
         project_dir=PROJECT_DIR,
-        # TODO: Why tf we do it like this?
         inventory='{}@{},'.format(tmp_args.web_user, tmp_args.web_host),
         playbook='get-ansible-facts.yml',
     )
@@ -265,16 +265,35 @@ def main():
 
     args = validator.get_validated_args()
 
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
+
     lampsible = Lampsible(
+        web_user=args.web_user,
+        web_host=args.web_host,
+        action=args.action,
+        private_data_dir=args.private_data_dir,
+        apache_server_admin=args.apache_server_admin,
+        apache_document_root=args.apache_document_root,
+        apache_vhost_name=args.apache_vhost_name,
+        ssl_certbot=args.ssl_certbot,
+        ssl_selfsigned=args.ssl_selfsigned,
+        ssl_test_cert=args.ssl_test_cert,
+        email_for_ssl=args.email_for_ssl,
+        extra_env_vars=args.extra_env_vars,
     )
 
-
-    galaxy_result = ensure_ansible_galaxy_dependencies(os.path.join(
-        PROJECT_DIR, 'ansible-galaxy-requirements.yml'))
-
+    # TODO: Improve this?
+    galaxy_result = ensure_ansible_galaxy_dependencies(
+        os.path.join(
+            PROJECT_DIR,
+            'ansible-galaxy-requirements.yml'
+        ),
+        USER_HOME_DIR
+    )
     if galaxy_result == 1:
         return 1
+
+    lampsible.run()
 
 
     if args.action == 'dump-ansible-facts':
@@ -292,31 +311,20 @@ def main():
         # TODO: Have to refactor this, see comment above.
         raise NotImplementedError()
 
-    playbook = '{}.yml'.format(args.action)
+    # TODO: Refactor this.
+    # if args.ssh_key_file:
+    #     try:
+    #         with open(os.path.abspath(args.ssh_key_file), 'r') as key_file:
+    #             key_data = key_file.read()
+    #         rc.ssh_key_data = key_data
+    #     except FileNotFoundError:
+    #         print('Warning! SSH key file not found!')
 
-    rc = RunnerConfig(
-        private_data_dir=args.private_data_dir,
-        project_dir=PROJECT_DIR,
-        # extravars=validator.get_extravars_dict(),
-        playbook=playbook,
-    )
 
-    if args.ssh_key_file:
-        try:
-            with open(os.path.abspath(args.ssh_key_file), 'r') as key_file:
-                key_data = key_file.read()
-            rc.ssh_key_data = key_data
-        except FileNotFoundError:
-            print('Warning! SSH key file not found!')
+    # TODO: Bring these to Lampsible class.
+    # print(r.stats)
 
-    rc.prepare()
-    r = Runner(config=rc)
-    r.run()
-
-    # TODO: Deal with these better.
-    print(r.stats)
-
-    rmtree(private_data_dir)
+    # rmtree(private_data_dir)
 
     return 0
 

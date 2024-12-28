@@ -2,7 +2,8 @@ import os
 from sys import path as sys_path
 from yaml import safe_load
 from ansible_runner import run_command
-
+from .constants import *
+# import pdb; pdb.set_trace()
 
 def find_package_project_dir():
     for path_str in sys_path:
@@ -15,7 +16,9 @@ def find_package_project_dir():
     raise RuntimeError("Got no user supplied --project-dir, and could not find one in expected package location. Your Lampsible installation is likely broken. However, if you are running this code directly from source, this is expected behavior. You probably forgot to pass the '--project-dir' flag. The directoy you're looking for is 'src/lampsible/project/'.")
 
 
-def ensure_ansible_galaxy_dependencies(galaxy_requirements_file):
+# TODO: I want to make USER_HOME_DIR accessible globally, but can't figure it out right now :-(
+# So I had to add the argument user_home_dir
+def ensure_ansible_galaxy_dependencies(galaxy_requirements_file, user_home_dir):
     with open(galaxy_requirements_file, 'r') as stream:
         required_collections = []
         tmp_collections = safe_load(stream)['collections']
@@ -32,7 +35,7 @@ def ensure_ansible_galaxy_dependencies(galaxy_requirements_file):
             'collection',
             'list',
             '--collections-path',
-            os.path.join(USER_HOME_DIR, '.ansible'),
+            os.path.join(user_home_dir, '.ansible'),
         ],
         quiet=True
     )[0]

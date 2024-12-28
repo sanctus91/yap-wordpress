@@ -252,30 +252,6 @@ class ArgValidator():
             return password
 
 
-
-        # # TODO?!?
-        # with InventoryFile(
-        #     os.path.join(
-        #         self.private_data_dir,
-        #         'inventory',
-        #         'hosts'
-        #     )
-        # ) as inventory_file:
-
-        #     inventory_file.add_groups([
-        #         'web_servers',
-        #         'database_servers',
-        #     ])
-        #     inventory_file.add_host(self.web_host, 'web_servers')
-        #     inventory_file.add_host(self.db_sys_host, 'database_servers')
-        #     inventory_file.set_ansible_user(self.web_host, self.web_user)
-        #     inventory_file.set_ansible_user(self.db_sys_host, self.db_sys_user)
-
-        #     inventory_file.write()
-
-        return 0
-
-
     def validate_ansible_runner_args(self):
         if self.args.web_user_host:
             try:
@@ -298,6 +274,7 @@ class ArgValidator():
                 print("FATAL! --database-system-user-host must be in the format of 'user@host'. Alternatively, omit it to install database on web server.")
                 return 1
         else:
+            # TODO: This is already taken care of in the Lampsible constructor.
             self.validated_args.db_sys_user = self.validated_args.web_user
             self.validated_args.db_sys_host = self.validated_args.web_host
         if self.args.action not in SUPPORTED_ACTIONS:
@@ -318,68 +295,68 @@ class ArgValidator():
 
     # TODO: Most of this, if not all of it, is being moved to Lampsible.set_apache_args.
     # Refactor this.
-    def validate_apache_args(self):
+    # def validate_apache_args(self):
 
-        server_name = self.validated_args.web_host
-        try:
-            assert FQDN(server_name).is_valid
-        except AssertionError:
-            server_name = DEFAULT_APACHE_SERVER_NAME
+    #     server_name = self.validated_args.web_host
+    #     try:
+    #         assert FQDN(server_name).is_valid
+    #     except AssertionError:
+    #         server_name = DEFAULT_APACHE_SERVER_NAME
 
-        if self.args.action in [
-            'wordpress',
-            'joomla',
-        ]:
-            if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
-                self.validated_args.apache_document_root = '{}/{}'.format(
-                    DEFAULT_APACHE_DOCUMENT_ROOT,
-                    self.args.action
-                )
+    #     if self.args.action in [
+    #         'wordpress',
+    #         'joomla',
+    #     ]:
+    #         if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
+    #             self.validated_args.apache_document_root = '{}/{}'.format(
+    #                 DEFAULT_APACHE_DOCUMENT_ROOT,
+    #                 self.args.action
+    #             )
 
-            if self.args.apache_vhost_name == DEFAULT_APACHE_VHOST_NAME:
-                self.validated_args.apache_vhost_name = self.args.action
+    #         if self.args.apache_vhost_name == DEFAULT_APACHE_VHOST_NAME:
+    #             self.validated_args.apache_vhost_name = self.args.action
 
-        elif self.args.action == 'drupal':
-            if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
-                self.validated_args.apache_document_root = '{}/drupal/web'.format(
-                    DEFAULT_APACHE_DOCUMENT_ROOT
-                )
+    #     elif self.args.action == 'drupal':
+    #         if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
+    #             self.validated_args.apache_document_root = '{}/drupal/web'.format(
+    #                 DEFAULT_APACHE_DOCUMENT_ROOT
+    #             )
 
-        elif self.args.action == 'laravel':
-            if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
-                self.validated_args.apache_document_root = '{}/{}/public'.format(
-                    DEFAULT_APACHE_DOCUMENT_ROOT,
-                    self.args.app_name
-                )
+    #     elif self.args.action == 'laravel':
+    #         if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
+    #             self.validated_args.apache_document_root = '{}/{}/public'.format(
+    #                 DEFAULT_APACHE_DOCUMENT_ROOT,
+    #                 self.args.app_name
+    #             )
 
-            if self.args.apache_vhost_name == DEFAULT_APACHE_VHOST_NAME:
-                self.validated_args.apache_vhost_name = self.args.app_name
+    #         if self.args.apache_vhost_name == DEFAULT_APACHE_VHOST_NAME:
+    #             self.validated_args.apache_vhost_name = self.args.app_name
 
-        base_vhost_dict = {
-            'base_vhost_file': '{}.conf'.format(DEFAULT_APACHE_VHOST_NAME),
-            'document_root':  self.validated_args.apache_document_root,
-            'vhost_name':     self.validated_args.apache_vhost_name,
-            'server_name':    server_name,
-            'server_admin':   self.args.apache_server_admin,
-            'allow_override': self.get_apache_allow_override(),
-        }
+    #     base_vhost_dict = {
+    #         'base_vhost_file': '{}.conf'.format(DEFAULT_APACHE_VHOST_NAME),
+    #         'document_root':  self.validated_args.apache_document_root,
+    #         'vhost_name':     self.validated_args.apache_vhost_name,
+    #         'server_name':    server_name,
+    #         'server_admin':   self.args.apache_server_admin,
+    #         'allow_override': self.get_apache_allow_override(),
+    #     }
 
-        self.apache_vhosts = [base_vhost_dict]
+    #     self.apache_vhosts = [base_vhost_dict]
 
-        if self.args.ssl_selfsigned:
+    #     if self.args.ssl_selfsigned:
 
-            # TODO: Use deepcopy?
-            ssl_vhost_dict = copy(base_vhost_dict)
+    #         # TODO: Use deepcopy?
+    #         ssl_vhost_dict = copy(base_vhost_dict)
 
-            ssl_vhost_dict['base_vhost_file'] = 'default-ssl.conf'
-            ssl_vhost_dict['vhost_name']      += '-ssl'
+    #         ssl_vhost_dict['base_vhost_file'] = 'default-ssl.conf'
+    #         ssl_vhost_dict['vhost_name']      += '-ssl'
 
-            self.apache_vhosts.append(ssl_vhost_dict)
+    #         self.apache_vhosts.append(ssl_vhost_dict)
 
-            if self.args.ssl_selfsigned:
-                self.apache_custom_conf_name = 'ssl-params'
+    #         if self.args.ssl_selfsigned:
+    #             self.apache_custom_conf_name = 'ssl-params'
 
-        return 0
+    #     return 0
 
 
     def validate_database_args(self):
@@ -456,7 +433,7 @@ class ArgValidator():
                 {
                     'arg_name': 'domains_for_ssl',
                     'cli_default_value': None,
-                    'override_default_value': [self.web_host],
+                    'override_default_value': [self.validated_args.web_host],
                 },
                 {
                     'arg_name': 'email_for_ssl',
@@ -465,7 +442,7 @@ class ArgValidator():
                 },
             ])
 
-            if not match(r"[^@]+@[^@]+\.[^@]+", self.args.email_for_ssl):
+            if not match(r"[^@]+@[^@]+\.[^@]+", self.validated_args.email_for_ssl):
                 print("\nFATAL! --email-for-ssl needs to be valid. Got '{}'. Aborting.".format(
                     self.args.email_for_ssl))
                 return 1
@@ -500,6 +477,9 @@ class ArgValidator():
             'latest': '8.3',
         }
 
+        # TODO: We don't really need this anymore, because 'apt install php'
+        # will work just as well as for example 'apt install php8.3'
+
         # User passed nothing, so we set the proper version based on
         # the Ubuntu version
         if self.args.php_version == DEFAULT_PHP_VERSION:
@@ -523,51 +503,51 @@ class ArgValidator():
         # TODO: This part especially is moving to Lampsible.set_action.
         # But there, we'll make use of the fact that we don't need the PHP version.
         # 'apt install php-mysql' works just as well as 'apt install php8.3-mysql'
-        if self.args.php_extensions:
-            extensions = [
-                extension.strip()
-                for extension in self.args.php_extensions.split(',')
-            ]
-        elif self.args.action == 'lamp-stack':
-            extensions = ['mysql']
+        # if self.args.php_extensions:
+        #     extensions = [
+        #         extension.strip()
+        #         for extension in self.args.php_extensions.split(',')
+        #     ]
+        # elif self.args.action == 'lamp-stack':
+        #     extensions = ['mysql']
 
-        elif self.args.action == 'wordpress':
-            extensions = ['mysql']
+        # elif self.args.action == 'wordpress':
+        #     extensions = ['mysql']
 
-        elif self.args.action == 'joomla':
-            extensions = [
-                'simplexml',
-                'dom',
-                'zip',
-                'gd',
-                'mysql',
-            ]
+        # elif self.args.action == 'joomla':
+        #     extensions = [
+        #         'simplexml',
+        #         'dom',
+        #         'zip',
+        #         'gd',
+        #         'mysql',
+        #     ]
 
-        elif self.args.action == 'drupal':
-            extensions = [
-                'mysql',
-                'xml',
-                'gd',
-                'curl',
-                'mbstring',
-            ]
+        # elif self.args.action == 'drupal':
+        #     extensions = [
+        #         'mysql',
+        #         'xml',
+        #         'gd',
+        #         'curl',
+        #         'mbstring',
+        #     ]
 
-        elif self.args.action == 'laravel':
-            extensions = [
-                'mysql',
-                'xml',
-                'mbstring'
-            ]
+        # elif self.args.action == 'laravel':
+        #     extensions = [
+        #         'mysql',
+        #         'xml',
+        #         'mbstring'
+        #     ]
 
-        else:
-            extensions = []
+        # else:
+        #     extensions = []
 
-        self.validated_args.php_extensions = [
-            'php{}-{}'.format(
-                self.validated_args.php_version,
-                extension
-            ) for extension in extensions
-        ]
+        # self.validated_args.php_extensions = [
+        #     'php{}-{}'.format(
+        #         self.validated_args.php_version,
+        #         extension
+        #     ) for extension in extensions
+        # ]
 
         try:
             self.validated_args.composer_packages = self.args.composer_packages.split(',')
@@ -629,19 +609,19 @@ class ArgValidator():
             )
 
         # TODO: This is moving to Lampsible._update_env.
-        if self.args.ssl_certbot:
-            if self.web_host[:4] == 'www.':
-                www_domain = self.web_host
-            else:
-                www_domain = 'www.{}'.format(self.web_host)
+        # if self.args.ssl_certbot:
+        #     if self.web_host[:4] == 'www.':
+        #         www_domain = self.web_host
+        #     else:
+        #         www_domain = 'www.{}'.format(self.web_host)
 
-            if www_domain not in self.validated_args.domains_for_ssl:
-                self.validated_args.domains_for_ssl.append(www_domain)
+        #     if www_domain not in self.validated_args.domains_for_ssl:
+        #         self.validated_args.domains_for_ssl.append(www_domain)
 
-            self.wordpress_url = www_domain
+        #     self.wordpress_url = www_domain
 
-        else:
-            self.wordpress_url = self.web_host
+        # else:
+        #     self.wordpress_url = self.web_host
 
         return 0
 
@@ -728,14 +708,14 @@ class ArgValidator():
             print('The latest version of Drupal requires minimum PHP 8.3.')
             return 1
 
-        self.validated_args.composer_project = 'drupal/recommended-project'
-        self.validated_args.composer_working_directory = '{}/drupal'.format(
-            DEFAULT_APACHE_DOCUMENT_ROOT
-        )
-        try:
-            self.validated_args.composer_packages.append('drush/drush')
-        except AttributeError:
-            self.validated_args.composer_packages = ['drush/drush']
+        # self.validated_args.composer_project = 'drupal/recommended-project'
+        # self.validated_args.composer_working_directory = '{}/drupal'.format(
+        #     DEFAULT_APACHE_DOCUMENT_ROOT
+        # )
+        # try:
+        #     self.validated_args.composer_packages.append('drush/drush')
+        # except AttributeError:
+        #     self.validated_args.composer_packages = ['drush/drush']
 
         self.handle_defaults([
             {
@@ -790,7 +770,7 @@ class ArgValidator():
             return 1
 
         # TODO: This has now also moved to Lampsible._update_env.
-        self.validated_args.app_source_root = '/var/www/html/{}'.format(self.validated_args.app_name)
+        # self.validated_args.app_source_root = '/var/www/html/{}'.format(self.validated_args.app_name)
 
         self.validated_args.laravel_artisan_commands = \
             self.args.laravel_artisan_commands.split(',')
@@ -804,24 +784,19 @@ class ArgValidator():
         except AttributeError:
             self.validated_args.extra_packages = []
 
+        self.validated_args.extra_env_vars = {}
         try:
-            # TODO: This is being refactored as well, see Lampsible.
-            self.validated_args.extra_env_vars = self.args.extra_env_vars.split(',')
+            tmp_split_vars = self.args.extra_env_vars.split(',')
             try:
-                for i in range(len(self.validated_args.extra_env_vars)):
-                    assert len(self.validated_args.extra_env_vars[i].split('=')) == 2
-                    self.validated_args.extra_env_vars[i] = self.args.extra_env_vars[i].strip()
+                for key_eq_val in tmp_split_vars:
+                    tmp_var = key_eq_val.split('=')
+                    assert len(tmp_var) == 2
+                    self.validated_args.extra_env_vars[tmp_var[0]] = tmp_var[1]
             except AssertionError:
                 print('FATAL! Invalid --extra-env-vars. Aborting.')
                 return 1
         except AttributeError:
-            self.validated_args.extra_env_vars = []
-
-        if self.args.action == 'laravel':
-            self.validated_args.laravel_extra_env_vars = self.validated_args.extra_env_vars
-            self.validated_args.extra_env_vars = []
-        else:
-            self.validated_args.extra_env_vars = self.args.extra_env_vars
+            pass
 
         return 0
 
@@ -844,7 +819,7 @@ class ArgValidator():
     def validate_args(self):
         validate_methods = [
             'validate_ansible_runner_args',
-            'validate_apache_args',
+            # 'validate_apache_args',
             'validate_database_args',
             'validate_ssl_args',
             'validate_php_args',
