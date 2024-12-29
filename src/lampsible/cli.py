@@ -279,6 +279,9 @@ def main():
         ssl_selfsigned=args.ssl_selfsigned,
         ssl_test_cert=args.ssl_test_cert,
         email_for_ssl=args.email_for_ssl,
+        database_username=args.database_username,
+        database_password=args.database_password,
+        database_name=args.database_name,
         extra_env_vars=args.extra_env_vars,
     )
 
