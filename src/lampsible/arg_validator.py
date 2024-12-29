@@ -463,91 +463,84 @@ class ArgValidator():
         ]:
             return 0
 
-        if int(self.ansible_facts['ubuntu_version']) <= 20:
-            ubuntu_version = 'legacy'
-        else:
-            ubuntu_version = self.ansible_facts['ubuntu_version']
-
-        ubuntu_to_php_version = {
-            'legacy': '7.4',
-            '21'    : '8.0',
-            '22'    : '8.1',
-            '23'    : '8.2',
-            '24'    : '8.3',
-            'latest': '8.3',
-        }
-
         # TODO: We don't really need this anymore, because 'apt install php'
         # will work just as well as for example 'apt install php8.3'
+        if self.args.php_version:
+            if int(self.ansible_facts['ubuntu_version']) <= 20:
+                ubuntu_version = 'legacy'
+            else:
+                ubuntu_version = self.ansible_facts['ubuntu_version']
 
-        # User passed nothing, so we set the proper version based on
-        # the Ubuntu version
-        if self.args.php_version == DEFAULT_PHP_VERSION:
-            self.validated_args.php_version = ubuntu_to_php_version[ubuntu_version]
+            ubuntu_to_php_version = {
+                'legacy': '7.4',
+                '21'    : '8.0',
+                '22'    : '8.1',
+                '23'    : '8.2',
+                '24'    : '8.3',
+                'latest': '8.3',
+            }
+            # Sanity check
+            if self.validated_args.php_version not in SUPPORTED_PHP_VERSIONS:
+                print('FATAL! Invalid PHP version!')
+                return 1
+            # User passed a value, warn them if it's likely to not work.
+            # TODO: In the future, we should have a global "non-interactive" flag,
+            # based on which this can be handled better, for example, "interactive"
+            # mode could offer to correct the user's input.
+            elif self.validated_args.php_version != ubuntu_to_php_version[ubuntu_version]:
+                print('Warning! You are trying to install PHP {} on Ubuntu {}. Unless you manually configured the APT repository, this will not work.'.format(
+                    self.validated_args.php_version,
+                    self.ansible_facts['ubuntu_version']
+                ))
 
-        # Sanity check
-        elif self.validated_args.php_version not in SUPPORTED_PHP_VERSIONS:
-            print('FATAL! Invalid PHP version!')
-            return 1
+        # TODO: A little redundant maybe because the Lampsible class now does something similar.
+        # Based on the action, it appends anything else that it might need.
+        # But this is still needed as well.
+        if self.args.php_extensions:
+            extensions = [
+                extension.strip()
+                for extension in self.args.php_extensions.split(',')
+            ]
+        elif self.args.action == 'lamp-stack':
+            extensions = ['mysql']
 
-        # User passed a value, warn them if it's likely to not work.
-        # TODO: In the future, we should have a global "non-interactive" flag,
-        # based on which this can be handled better, for example, "interactive"
-        # mode could offer to correct the user's input.
-        elif self.validated_args.php_version != ubuntu_to_php_version[ubuntu_version]:
-            print('Warning! You are trying to install PHP {} on Ubuntu {}. Unless you manually configured the APT repository, this will not work.'.format(
-                self.validated_args.php_version,
-                self.ansible_facts['ubuntu_version']
-            ))
+        elif self.args.action == 'wordpress':
+            extensions = ['mysql']
 
-        # TODO: This part especially is moving to Lampsible.set_action.
-        # But there, we'll make use of the fact that we don't need the PHP version.
-        # 'apt install php-mysql' works just as well as 'apt install php8.3-mysql'
-        # if self.args.php_extensions:
-        #     extensions = [
-        #         extension.strip()
-        #         for extension in self.args.php_extensions.split(',')
-        #     ]
-        # elif self.args.action == 'lamp-stack':
-        #     extensions = ['mysql']
+        elif self.args.action == 'joomla':
+            extensions = [
+                'simplexml',
+                'dom',
+                'zip',
+                'gd',
+                'mysql',
+            ]
 
-        # elif self.args.action == 'wordpress':
-        #     extensions = ['mysql']
+        elif self.args.action == 'drupal':
+            extensions = [
+                'mysql',
+                'xml',
+                'gd',
+                'curl',
+                'mbstring',
+            ]
 
-        # elif self.args.action == 'joomla':
-        #     extensions = [
-        #         'simplexml',
-        #         'dom',
-        #         'zip',
-        #         'gd',
-        #         'mysql',
-        #     ]
+        elif self.args.action == 'laravel':
+            extensions = [
+                'mysql',
+                'xml',
+                'mbstring'
+            ]
 
-        # elif self.args.action == 'drupal':
-        #     extensions = [
-        #         'mysql',
-        #         'xml',
-        #         'gd',
-        #         'curl',
-        #         'mbstring',
-        #     ]
+        else:
+            extensions = []
 
-        # elif self.args.action == 'laravel':
-        #     extensions = [
-        #         'mysql',
-        #         'xml',
-        #         'mbstring'
-        #     ]
-
-        # else:
-        #     extensions = []
-
-        # self.validated_args.php_extensions = [
-        #     'php{}-{}'.format(
-        #         self.validated_args.php_version,
-        #         extension
-        #     ) for extension in extensions
-        # ]
+        self.validated_args.php_extensions = [
+            'php{}-{}'.format(
+                str(self.validated_args.php_version or ''),
+                extension
+            ) for extension in extensions
+        ]
 
         try:
             self.validated_args.composer_packages = self.args.composer_packages.split(',')
@@ -559,13 +552,14 @@ class ArgValidator():
             print('Got invalid --composer-packages')
             return 1
 
-        self.handle_defaults(
-            [{
-                'arg_name': 'composer_working_directory',
-                'cli_default_value': None,
-                'override_default_value': self.validated_args.apache_document_root,
-            }]
-        )
+        # This would break it I think.
+        # self.handle_defaults(
+        #     [{
+        #         'arg_name': 'composer_working_directory',
+        #         'cli_default_value': None,
+        #         'override_default_value': self.validated_args.apache_document_root,
+        #     }]
+        # )
 
         return 0
 

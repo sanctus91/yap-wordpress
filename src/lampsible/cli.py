@@ -230,6 +230,11 @@ def main():
     print(LAMPSIBLE_BANNER)
 
     # Fetching Ansible Facts
+    # TODO: The only reason that we do this, is so we can check the
+    # PHP version against the remote Ubuntu version. So we should
+    # move this ArgValidator.validate_php_args, and only call it if
+    # the user passed in a php_version.
+
     tmp_args = ArgValidator.pre_validate_args(args)
     if tmp_args == 1:
         print('FATAL! Got invalid user input, and cannot continue. Please fix the issues listed above and try again.')
@@ -254,7 +259,7 @@ def main():
     tmp_r = Runner(config=tmp_rc)
     tmp_r.run()
 
-    ansible_facts = tmp_r.get_fact_cache(tmp_args.web_host)
+    ansible_facts = tmp_r.get_fact_cache('{}@{}'.format(tmp_args.web_user, tmp_args.web_host))
 
     validator = ArgValidator(args, ansible_facts)
     result = validator.validate_args()
@@ -264,8 +269,6 @@ def main():
         return 1
 
     args = validator.get_validated_args()
-
-    # import pdb; pdb.set_trace()
 
     lampsible = Lampsible(
         web_user=args.web_user,
@@ -282,6 +285,11 @@ def main():
         database_username=args.database_username,
         database_password=args.database_password,
         database_name=args.database_name,
+        php_version=args.php_version,
+        php_extensions=args.php_extensions,
+        composer_packages=args.composer_packages,
+        composer_working_directory=args.composer_working_directory,
+        composer_project=args.composer_project,
         extra_env_vars=args.extra_env_vars,
     )
 
