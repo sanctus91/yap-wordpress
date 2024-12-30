@@ -3,6 +3,7 @@ from re import match
 from copy import copy, deepcopy
 from warnings import warn
 from getpass import getpass
+from textwrap import dedent
 from requests import head as requests_head
 from ansible_runner import Runner, RunnerConfig
 from ansible_directory_helper.inventory_file import InventoryFile
@@ -286,6 +287,21 @@ class ArgValidator():
             # TODO: In the future, we should have a global "non-interactive" flag,
             # based on which this can be handled better, for example, "interactive"
             # mode could offer to correct the user's input.
+
+            # Temporary notice about manually adding support for PHP 8.4.
+            elif self.validated_args.php_version == '8.4':
+                print(dedent("""
+                    Warning! PHP 8.4 is the latest stable PHP version, but at the
+                    moment, Ubuntu package repositories are still configured
+                    for PHP 8.3.
+                    What you are trying to do will not work without manually
+                    configuring your server's APT repositories.
+
+                    Run these commands on the server before proceeding:
+                """))
+                print('sudo apt install software-properties-common')
+                print('sudo add-apt-repository ppa:ondrej/php\n')
+
             elif self.validated_args.php_version != ubuntu_to_php_version[ubuntu_version]:
                 print('Warning! You are trying to install PHP {} on Ubuntu {}. Unless you manually configured the APT repository, this will not work.'.format(
                     self.validated_args.php_version,
