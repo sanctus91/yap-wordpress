@@ -81,7 +81,6 @@ class Lampsible:
             private_data_dir=private_data_dir,
             project_dir=PROJECT_DIR,
         )
-        self.set_action(action)
 
         self.runner = Runner(config=self.runner_config)
         # ...
@@ -111,6 +110,8 @@ class Lampsible:
         self.composer_packages          = composer_packages
         self.composer_project           = composer_project
         self.composer_working_directory = composer_working_directory
+
+        self.set_action(action)
 
         self.site_title     = site_title
         self.admin_username = admin_username
