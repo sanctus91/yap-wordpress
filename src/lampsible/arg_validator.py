@@ -692,25 +692,15 @@ class ArgValidator():
         return 0
 
 
-    # TODO: Most of this is also moving to Lampsible.set_action.
-    # Refactor this.
     def validate_drupal_args(self):
 
         if self.args.action != 'drupal':
             return 0
 
-        if float(self.validated_args.php_version) < 8.3:
+        if self.validated_args.php_version \
+                and float(self.validated_args.php_version) < 8.3:
             print('The latest version of Drupal requires minimum PHP 8.3.')
             return 1
-
-        # self.validated_args.composer_project = 'drupal/recommended-project'
-        # self.validated_args.composer_working_directory = '{}/drupal'.format(
-        #     DEFAULT_APACHE_DOCUMENT_ROOT
-        # )
-        # try:
-        #     self.validated_args.composer_packages.append('drush/drush')
-        # except AttributeError:
-        #     self.validated_args.composer_packages = ['drush/drush']
 
         self.handle_defaults([
             {

@@ -300,6 +300,7 @@ def main():
         wordpress_locale=args.wordpress_locale,
         joomla_version=args.joomla_version,
         joomla_admin_full_name=args.joomla_admin_full_name,
+        drupal_profile=args.drupal_profile,
         extra_env_vars=args.extra_env_vars,
     )
 

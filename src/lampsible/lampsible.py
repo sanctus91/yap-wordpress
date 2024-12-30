@@ -179,13 +179,15 @@ class Lampsible:
                 'php-curl',
                 'php-mbstring',
             ]
-            self.composer_project = 'drupal/recommended-project'
+            if not self.composer_project:
+                self.composer_project = 'drupal/recommended-project'
             if not self.composer_working_directory:
                 self.composer_working_directory = '{}/drupal'.format(
                     self.apache_document_root
                 )
             try:
-                self.composer_packages.append('drush/drush')
+                if 'drush/drush' not in self.composer_packages:
+                    self.composer_packages.append('drush/drush')
             except AttributeError:
                 self.composer_packages = ['drush/drush']
         elif action == 'laravel':
