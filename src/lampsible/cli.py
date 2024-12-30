@@ -301,7 +301,12 @@ def main():
         joomla_version=args.joomla_version,
         joomla_admin_full_name=args.joomla_admin_full_name,
         drupal_profile=args.drupal_profile,
+        app_name=args.app_name,
+        app_build_path=args.app_build_path,
+        laravel_artisan_commands=args.laravel_artisan_commands,
+        app_local_env=args.app_local_env,
         extra_env_vars=args.extra_env_vars,
+        extra_packages=args.extra_packages,
     )
 
     # TODO: Improve this?

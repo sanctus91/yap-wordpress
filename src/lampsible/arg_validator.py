@@ -754,9 +754,6 @@ class ArgValidator():
             ))
             return 1
 
-        # TODO: This has now also moved to Lampsible._update_env.
-        # self.validated_args.app_source_root = '/var/www/html/{}'.format(self.validated_args.app_name)
-
         self.validated_args.laravel_artisan_commands = \
             self.args.laravel_artisan_commands.split(',')
 

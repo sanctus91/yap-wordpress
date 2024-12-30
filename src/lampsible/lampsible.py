@@ -51,13 +51,6 @@ class Lampsible:
             # These are from arg_validator. In v1, arg_validator generates these
             # variables, and passes them into extravars. We'll still need them here.
             apache_custom_conf_name='',
-
-            # TODO: Also don't know about this one...
-            app_source_root=None,
-
-            private_data_helper=None,
-            runner_config=None,
-            runner=None
             ):
 
         self.web_user = web_user
