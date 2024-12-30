@@ -215,6 +215,7 @@ def main():
     # Misc
     # ----
     parser.add_argument('--insecure-cli-password', action='store_true', help="If you want to pass passwords directly over the CLI, you have to pass this flag as well, otherwise Lampsible will refuse to run. This is not advised.")
+    # TODO: DEPRECATED.
     parser.add_argument('--insecure-skip-fail2ban', action='store_true', help="Pass this flag if you don't want to install fail2ban on your server. This is insecure not advised.")
     parser.add_argument('--extra-packages', help="comma separated list of any extra packages to be installed on the remote server")
     parser.add_argument('--extra-env-vars', '-e', help="comma separated list of any extra environment variables that you want to pass to your web app. If you are installing a Laravel app, these variables will be appended to your app's .env file. Otherwise, they'll be appended to Apache's envvars file, typically found in /etc/apache2/envvars. Example: SOME_VARIABLE=some-value,OTHER_VARIABLE=other-value")
@@ -296,6 +297,7 @@ def main():
         admin_email=args.admin_email,
         wordpress_version=args.wordpress_version,
         wordpress_locale=args.wordpress_locale,
+        wordpress_insecure_allow_xmlrpc=args.wordpress_insecure_allow_xmlrpc,
         joomla_version=args.joomla_version,
         joomla_admin_full_name=args.joomla_admin_full_name,
         drupal_profile=args.drupal_profile,
@@ -305,6 +307,8 @@ def main():
         app_local_env=args.app_local_env,
         extra_env_vars=args.extra_env_vars,
         extra_packages=args.extra_packages,
+        ssh_key_file=args.ssh_key_file,
+        remote_sudo_password=args.remote_sudo_password
     )
 
     # TODO: Improve this?
@@ -335,15 +339,6 @@ def main():
         # return 0
         # TODO: Have to refactor this, see comment above.
         raise NotImplementedError()
-
-    # TODO: Refactor this.
-    # if args.ssh_key_file:
-    #     try:
-    #         with open(os.path.abspath(args.ssh_key_file), 'r') as key_file:
-    #             key_data = key_file.read()
-    #         rc.ssh_key_data = key_data
-    #     except FileNotFoundError:
-    #         print('Warning! SSH key file not found!')
 
     return 0
 

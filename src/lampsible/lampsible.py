@@ -39,7 +39,6 @@ class Lampsible:
             database_table_prefix=DEFAULT_DATABASE_TABLE_PREFIX, php_extensions=[],
             composer_packages=[], composer_working_directory=None,
             composer_project=None, admin_password=None,
-            # TODO: Deprecate this.
             wordpress_insecure_allow_xmlrpc=False,
             app_local_env=False,
             laravel_artisan_commands=DEFAULT_LARAVEL_ARTISAN_COMMANDS,
@@ -84,8 +83,6 @@ class Lampsible:
         self.email_for_ssl   = email_for_ssl
         self.domains_for_ssl = domains_for_ssl
 
-        # TODO: Deprecate this.
-        self.wordpress_insecure_allow_xmlrpc = wordpress_insecure_allow_xmlrpc
         self.apache_custom_conf_name = apache_custom_conf_name
 
         self.database_username     = database_username
@@ -122,8 +119,18 @@ class Lampsible:
         self.app_local_env = app_local_env
         self.extra_packages = extra_packages
         self.extra_env_vars = extra_env_vars
-        # TODO: Deprecate this?
+        # TODO: DEPRECATED
         self.insecure_skip_fail2ban = insecure_skip_fail2ban
+
+        if ssh_key_file:
+            try:
+                with open(os.path.abspath(ssh_key_file), 'r') as key_file:
+                    key_data = key_file.read()
+                self.runner_config.ssh_key_data = key_data
+            except FileNotFoundError:
+                print('Warning! SSH key file not found!')
+
+        self.remote_sudo_password = remote_sudo_password
 
         self.banner = LAMPSIBLE_BANNER
 
@@ -324,6 +331,10 @@ class Lampsible:
             'extra_packages',
             'extra_env_vars',
             'insecure_skip_fail2ban',
+            # TODO: This one especially... use Ansible Runner's
+            # dedicated password feature, that is, we should add it
+            # ansible-directory-helper.
+            'ansible_sudo_pass',
         ]
         for varname in extravars:
             if varname == 'server_name':
@@ -369,6 +380,12 @@ class Lampsible:
                     DEFAULT_APACHE_DOCUMENT_ROOT,
                     self.app_name
                 )
+
+            elif varname == 'ansible_sudo_pass':
+                if self.remote_sudo_password:
+                    value = self.remote_sudo_password
+                else:
+                    continue
 
             else:
                 value = getattr(self, varname)
