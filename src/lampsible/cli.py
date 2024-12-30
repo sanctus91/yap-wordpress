@@ -298,6 +298,8 @@ def main():
         admin_email=args.admin_email,
         wordpress_version=args.wordpress_version,
         wordpress_locale=args.wordpress_locale,
+        joomla_version=args.joomla_version,
+        joomla_admin_full_name=args.joomla_admin_full_name,
         extra_env_vars=args.extra_env_vars,
     )
 

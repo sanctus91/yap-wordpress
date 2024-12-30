@@ -638,16 +638,17 @@ class ArgValidator():
         if self.args.action != 'joomla':
             return 0
 
-        if int(self.args.joomla_version[0]) >= 5 \
-                and float(self.validated_args.php_version) < 8.1:
-            print('FATAL! Joomla versions 5 and newer require minimum PHP version 8.1!')
-            return 1
-        elif int(self.args.joomla_version[0]) >= 4 \
-                and float(self.validated_args.php_version) < 7.2:
-            # Actually it requires at least 7.2.5, but I'm trusting package managers
-            # to get this right, also, no one should be using that old stuff anymore.
-            print('FATAL! Joomla 4 requires minimum PHP version 7.2!')
-            return 1
+        if self.validated_args.php_version:
+            if int(self.args.joomla_version[0]) >= 5 \
+                    and float(self.validated_args.php_version) < 8.1:
+                print('FATAL! Joomla versions 5 and newer require minimum PHP version 8.1!')
+                return 1
+            elif int(self.args.joomla_version[0]) >= 4 \
+                    and float(self.validated_args.php_version) < 7.2:
+                # Actually it requires at least 7.2.5, but I'm trusting package managers
+                # to get this right, also, no one should be using that old stuff anymore.
+                print('FATAL! Joomla 4 requires minimum PHP version 7.2!')
+                return 1
 
         self.handle_defaults([
             {
