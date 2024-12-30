@@ -4,7 +4,6 @@ from copy import copy, deepcopy
 from warnings import warn
 from getpass import getpass
 from requests import head as requests_head
-# from fqdn import FQDN
 from ansible_runner import Runner, RunnerConfig
 from ansible_directory_helper.inventory_file import InventoryFile
 from lampsible.constants import *
@@ -39,128 +38,6 @@ class ArgValidator():
 
     def get_validated_args(self):
         return self.validated_args
-
-
-    def get_apache_vhosts(self):
-        return self.apache_vhosts
-
-
-    # TODO: No more need for this, get rid of it.
-    def get_apache_custom_conf_name(self):
-        try:
-            return self.apache_custom_conf_name
-        except AttributeError:
-            return ''
-
-
-    def get_wordpress_url(self):
-        try:
-            return self.wordpress_url
-        except AttributeError:
-            return ''
-
-
-    # TODO: No more need for this, get rid of it.
-    def get_apache_allow_override(self):
-        return (
-            self.validated_args.action in ['laravel', 'drupal']
-            or (
-                self.validated_args.action == 'wordpress'
-                and not self.validated_args.wordpress_insecure_allow_xmlrpc
-            )
-        )
-
-
-    def get_certbot_domains_string(self):
-        try:
-            return '-d {}'.format(' -d '.join(self.validated_args.domains_for_ssl))
-        except TypeError:
-            return ''
-
-
-    def get_certbot_test_cert_string(self):
-        return '--test-cert' if self.validated_args.test_cert else ''
-
-
-    # TODO: Deprecate this in favor of Lampsible._update_env
-    def get_extravars_dict(self):
-        extravars = {
-            'web_host': self.validated_args.web_host,
-            'apache_vhosts': self.get_apache_vhosts(),
-            'apache_document_root': self.validated_args.apache_document_root,
-            'apache_vhost_name': self.validated_args.apache_vhost_name,
-            'apache_custom_conf_name': self.get_apache_custom_conf_name(),
-            'database_username': self.validated_args.database_username,
-            'database_password': self.validated_args.database_password,
-            'database_host': self.validated_args.database_host,
-            'database_name': self.validated_args.database_name,
-            'database_table_prefix': self.validated_args.database_table_prefix,
-            'ssl_certbot': self.validated_args.ssl_certbot,
-            'ssl_selfsigned': self.validated_args.ssl_selfsigned,
-            'email_for_ssl': self.validated_args.email_for_ssl,
-            'certbot_domains_string': self.get_certbot_domains_string(),
-            'certbot_test_cert_string': self.get_certbot_test_cert_string(),
-            'insecure_skip_fail2ban': self.validated_args.insecure_skip_fail2ban,
-            'extra_packages': self.validated_args.extra_packages,
-            'extra_env_vars': self.validated_args.extra_env_vars,
-        }
-        if self.validated_args.remote_sudo_password:
-            # TODO
-            # TODO: It would be better to not include this as an extravar, but to
-            # make use of Ansible Runner's password feature in the
-            # Input Directory Hierarchy.
-            extravars['ansible_sudo_pass'] = self.validated_args.remote_sudo_password
-
-        if self.args.action in [
-            'lamp-stack',
-            'php',
-            'wordpress',
-            'joomla',
-            'laravel',
-            'drupal',
-        ]:
-            extravars['php_version'] = self.validated_args.php_version
-            extravars['php_extensions'] = self.validated_args.php_extensions
-            extravars['composer_packages'] = self.validated_args.composer_packages
-            extravars['composer_working_directory'] = \
-                    self.validated_args.composer_working_directory
-            extravars['composer_project'] = self.validated_args.composer_project
-
-        if self.args.action in [
-            'wordpress',
-            'joomla',
-            'drupal',
-        ]:
-            extravars['site_title'] = self.validated_args.site_title
-            extravars['admin_username'] = self.validated_args.admin_username
-            extravars['admin_email'] = self.validated_args.admin_email
-            extravars['admin_password'] = self.validated_args.admin_password
-
-        if self.args.action == 'wordpress':
-            extravars['wordpress_version'] = self.validated_args.wordpress_version
-            extravars['wordpress_locale'] = self.validated_args.wordpress_locale
-            extravars['wordpress_insecure_allow_xmlrpc'] = \
-                self.validated_args.wordpress_insecure_allow_xmlrpc
-            extravars['wordpress_url'] = self.get_wordpress_url()
-
-        elif self.args.action == 'joomla':
-            # TODO: We could do something like 'cms_version' instead.
-            extravars['joomla_version'] = self.validated_args.joomla_version
-            extravars['joomla_admin_full_name'] = \
-                self.validated_args.joomla_admin_full_name
-
-        elif self.args.action == 'laravel':
-            extravars['app_build_path'] = self.validated_args.app_build_path
-            extravars['app_source_root'] = self.validated_args.app_source_root
-            extravars['app_local_env'] = self.validated_args.app_local_env
-            extravars['laravel_artisan_commands'] = \
-                self.validated_args.laravel_artisan_commands
-            extravars['laravel_extra_env_vars'] = self.validated_args.laravel_extra_env_vars
-
-        elif self.args.action == 'drupal':
-            extravars['drupal_profile'] = self.validated_args.drupal_profile
-
-        return extravars
 
 
     def handle_defaults(
@@ -293,72 +170,6 @@ class ArgValidator():
         return 0
 
 
-    # TODO: Most of this, if not all of it, is being moved to Lampsible.set_apache_args.
-    # Refactor this.
-    # def validate_apache_args(self):
-
-    #     server_name = self.validated_args.web_host
-    #     try:
-    #         assert FQDN(server_name).is_valid
-    #     except AssertionError:
-    #         server_name = DEFAULT_APACHE_SERVER_NAME
-
-    #     if self.args.action in [
-    #         'wordpress',
-    #         'joomla',
-    #     ]:
-    #         if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
-    #             self.validated_args.apache_document_root = '{}/{}'.format(
-    #                 DEFAULT_APACHE_DOCUMENT_ROOT,
-    #                 self.args.action
-    #             )
-
-    #         if self.args.apache_vhost_name == DEFAULT_APACHE_VHOST_NAME:
-    #             self.validated_args.apache_vhost_name = self.args.action
-
-    #     elif self.args.action == 'drupal':
-    #         if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
-    #             self.validated_args.apache_document_root = '{}/drupal/web'.format(
-    #                 DEFAULT_APACHE_DOCUMENT_ROOT
-    #             )
-
-    #     elif self.args.action == 'laravel':
-    #         if self.args.apache_document_root == DEFAULT_APACHE_DOCUMENT_ROOT:
-    #             self.validated_args.apache_document_root = '{}/{}/public'.format(
-    #                 DEFAULT_APACHE_DOCUMENT_ROOT,
-    #                 self.args.app_name
-    #             )
-
-    #         if self.args.apache_vhost_name == DEFAULT_APACHE_VHOST_NAME:
-    #             self.validated_args.apache_vhost_name = self.args.app_name
-
-    #     base_vhost_dict = {
-    #         'base_vhost_file': '{}.conf'.format(DEFAULT_APACHE_VHOST_NAME),
-    #         'document_root':  self.validated_args.apache_document_root,
-    #         'vhost_name':     self.validated_args.apache_vhost_name,
-    #         'server_name':    server_name,
-    #         'server_admin':   self.args.apache_server_admin,
-    #         'allow_override': self.get_apache_allow_override(),
-    #     }
-
-    #     self.apache_vhosts = [base_vhost_dict]
-
-    #     if self.args.ssl_selfsigned:
-
-    #         # TODO: Use deepcopy?
-    #         ssl_vhost_dict = copy(base_vhost_dict)
-
-    #         ssl_vhost_dict['base_vhost_file'] = 'default-ssl.conf'
-    #         ssl_vhost_dict['vhost_name']      += '-ssl'
-
-    #         self.apache_vhosts.append(ssl_vhost_dict)
-
-    #         if self.args.ssl_selfsigned:
-    #             self.apache_custom_conf_name = 'ssl-params'
-
-    #     return 0
-
-
     def validate_database_args(self):
 
         default_database_names = {
@@ -417,18 +228,10 @@ class ArgValidator():
         return 0
 
 
-    # TODO: Much of this is being moved to Lampsible constructor and _update_env.
-    # Refactor this.
     def validate_ssl_args(self):
-
+        # TODO: This will need to be refactored for version 2, because we
+        # will remove the flag --ssl-certbot, and make it True by default.
         if self.args.ssl_certbot:
-            ssl_action = 'certbot'
-        elif self.args.ssl_selfsigned:
-            ssl_action = 'selfsigned'
-        else:
-            ssl_action = None
-
-        if ssl_action == 'certbot':
             self.handle_defaults([
                 {
                     'arg_name': 'domains_for_ssl',
@@ -450,8 +253,6 @@ class ArgValidator():
         return 0
 
 
-    # TODO: Some of this is moving to the Lampsible class as well.
-    # Refactor this.
     def validate_php_args(self):
 
         if self.args.action in [
@@ -463,8 +264,6 @@ class ArgValidator():
         ]:
             return 0
 
-        # TODO: We don't really need this anymore, because 'apt install php'
-        # will work just as well as for example 'apt install php8.3'
         if self.args.php_version:
             if int(self.ansible_facts['ubuntu_version']) <= 20:
                 ubuntu_version = 'legacy'
@@ -552,15 +351,6 @@ class ArgValidator():
             print('Got invalid --composer-packages')
             return 1
 
-        # This would break it I think.
-        # self.handle_defaults(
-        #     [{
-        #         'arg_name': 'composer_working_directory',
-        #         'cli_default_value': None,
-        #         'override_default_value': self.validated_args.apache_document_root,
-        #     }]
-        # )
-
         return 0
 
 
@@ -601,21 +391,6 @@ class ArgValidator():
                 0,
                 True
             )
-
-        # TODO: This is moving to Lampsible._update_env.
-        # if self.args.ssl_certbot:
-        #     if self.web_host[:4] == 'www.':
-        #         www_domain = self.web_host
-        #     else:
-        #         www_domain = 'www.{}'.format(self.web_host)
-
-        #     if www_domain not in self.validated_args.domains_for_ssl:
-        #         self.validated_args.domains_for_ssl.append(www_domain)
-
-        #     self.wordpress_url = www_domain
-
-        # else:
-        #     self.wordpress_url = self.web_host
 
         return 0
 
@@ -801,7 +576,6 @@ class ArgValidator():
     def validate_args(self):
         validate_methods = [
             'validate_ansible_runner_args',
-            # 'validate_apache_args',
             'validate_database_args',
             'validate_ssl_args',
             'validate_php_args',

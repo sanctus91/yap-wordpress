@@ -1,6 +1,5 @@
 import argparse
 from ansible_runner import Runner, RunnerConfig
-from ansible_directory_helper.private_data import PrivateData
 from . import __version__
 from .constants import *
 from .lampsible import Lampsible
@@ -140,7 +139,6 @@ def main():
     # --------------
     parser.add_argument('--remote-sudo-password', help="sudo password of the remote server, this only works if you also pass '--insecure-cli-password'. This is not recommended, you should use '--ask-remote-sudo' instead.")
     parser.add_argument('--ssh-key-file', '-i',  help='path to your private SSH key')
-    # TODO: Deprecate this?
     parser.add_argument('--private-data-dir',
         default=DEFAULT_PRIVATE_DATA_DIR,
         help="the \"private data directory\" that Ansible Runner will use. Default is '{}'. You can use this flag to pass an alternative value. However, it's best to just leave this blank. Be advised that Ansible Runner will write sensitive data here, like your private SSH key and passwords, but Lampsible will delete this directory when it finishes."
@@ -346,12 +344,6 @@ def main():
     #         rc.ssh_key_data = key_data
     #     except FileNotFoundError:
     #         print('Warning! SSH key file not found!')
-
-
-    # TODO: Bring these to Lampsible class.
-    # print(r.stats)
-
-    # rmtree(private_data_dir)
 
     return 0
 

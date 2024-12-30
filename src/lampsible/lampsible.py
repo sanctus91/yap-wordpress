@@ -8,7 +8,6 @@ from ansible_directory_helper.private_data import PrivateData
 from fqdn import FQDN
 from . import __version__
 from .constants import *
-from .arg_validator import ArgValidator
 
 
 class Lampsible:
@@ -74,7 +73,7 @@ class Lampsible:
         )
 
         self.runner = Runner(config=self.runner_config)
-        # ...
+
         self.apache_document_root = apache_document_root
         self.apache_vhost_name    = apache_vhost_name
         self.apache_server_admin  = apache_server_admin
@@ -89,7 +88,6 @@ class Lampsible:
         self.wordpress_insecure_allow_xmlrpc = wordpress_insecure_allow_xmlrpc
         self.apache_custom_conf_name = apache_custom_conf_name
 
-        # ...
         self.database_username     = database_username
         self.database_password     = database_password
         self.database_name         = database_name
@@ -122,23 +120,6 @@ class Lampsible:
         self.app_build_path = app_build_path
         self.laravel_artisan_commands = laravel_artisan_commands
         self.app_local_env = app_local_env
-        # TODO: All that other stuff...
-        #     # Maybe a little better, but the setters need to each
-        #     # be implemented.
-        #     getattr(self, 'set_' + k)(v)
-
-        # Or instead, like this? Simple but messy...
-        # self.web_user = web_user
-        # self.web_host = web_host
-        # self.action = action
-        # self.database_username = database_username
-        # self.database_name = database_name
-        # self.database_host = database_host
-        # self.database_system_user = database_system_user
-        # self.database_system_host = database_system_host
-        # self.admin_username = admin_username
-        # self.admin_email = admin_email
-        # self.
         self.extra_packages = extra_packages
         self.extra_env_vars = extra_env_vars
         # TODO: Deprecate this?
@@ -417,6 +398,8 @@ class Lampsible:
         self._prepare_config()
         try:
             self.runner.run()
+            print(self.runner.stats)
+            self.private_data_helper.cleanup_dir()
             # TODO: We could do this better, like check the fact_cache and make sure
             # everything was alright, before returning 0.
             return 0

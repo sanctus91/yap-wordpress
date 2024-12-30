@@ -29,11 +29,6 @@ class TestLampsible(unittest.TestCase):
         )
 
 
-    def tearDown(self):
-        # TODO: This should be baked into the Lampsible class.
-        self.lampsible.private_data_helper.cleanup_dir()
-
-
     def test_banner(self):
         self.assertIn(__version__, self.lampsible.banner)
 
