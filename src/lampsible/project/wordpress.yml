@@ -35,10 +35,6 @@
       when: ssl_certbot
 
     - include_role:
-        name: domain-for-wordpress
-      when: ssl_certbot
-
-    - include_role:
         name: apache-conf
       when: ssl_selfsigned
 

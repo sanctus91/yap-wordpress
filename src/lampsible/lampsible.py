@@ -52,8 +52,6 @@ class Lampsible:
             # variables, and passes them into extravars. We'll still need them here.
             apache_custom_conf_name='',
 
-            # TODO: I don't want to have to use this one...
-            wordpress_url=None,
             # TODO: Also don't know about this one...
             app_source_root=None,
 
