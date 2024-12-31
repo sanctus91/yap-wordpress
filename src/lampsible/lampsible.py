@@ -335,6 +335,7 @@ class Lampsible:
             # dedicated password feature, that is, we should add it
             # ansible-directory-helper.
             'ansible_sudo_pass',
+            'open_database',
         ]
         for varname in extravars:
             if varname == 'server_name':
@@ -386,6 +387,15 @@ class Lampsible:
                     value = self.remote_sudo_password
                 else:
                     continue
+
+            elif varname == 'open_database':
+                if self.database_system_host is None \
+                        or self.database_system_host == self.web_host:
+                    value = False
+                else:
+                    value = True
+
+
 
             else:
                 value = getattr(self, varname)

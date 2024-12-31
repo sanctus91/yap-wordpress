@@ -286,6 +286,8 @@ def main():
         database_name=args.database_name,
         database_host=args.database_host,
         database_table_prefix=args.database_table_prefix,
+        database_system_user=args.database_system_user,
+        database_system_host=args.database_system_host,
         php_version=args.php_version,
         php_extensions=args.php_extensions,
         composer_packages=args.composer_packages,

@@ -145,16 +145,16 @@ class ArgValidator():
 
         if self.args.database_system_user_host:
             try:
-                db_sys_user_host = self.args.database_system_user_host.split('@')
-                self.validated_args.db_sys_user = db_sys_user_host[0]
-                self.validated_args.db_sys_host = db_sys_user_host[1]
+                db_sys_split = self.args.database_system_user_host.split('@')
+                self.validated_args.database_system_user = db_sys_split[0]
+                self.validated_args.database_system_host = db_sys_split[1]
             except IndexError:
                 print("FATAL! --database-system-user-host must be in the format of 'user@host'. Alternatively, omit it to install database on web server.")
                 return 1
         else:
             # TODO: This is already taken care of in the Lampsible constructor.
-            self.validated_args.db_sys_user = self.validated_args.web_user
-            self.validated_args.db_sys_host = self.validated_args.web_host
+            self.validated_args.database_system_user = self.validated_args.web_user
+            self.validated_args.database_system_host = self.validated_args.web_host
         if self.args.action not in SUPPORTED_ACTIONS:
             print('FATAL! Second positional argument must be one of {}'.format(
                 ', '.join(SUPPORTED_ACTIONS)
