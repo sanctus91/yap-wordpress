@@ -15,9 +15,9 @@ description = "Deploy and set up LAMP stacks with Ansible"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "ansible-core",
-    "ansible-runner",
-    "ansible-directory-helper>=0.2",
+    "ansible-core>=2.18",
+    "ansible-runner>=2.4",
+    "ansible-directory-helper>=0.2.1",
     "requests>=2.32.3",
     "fqdn",
 ]
