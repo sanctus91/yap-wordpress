@@ -1,12 +1,10 @@
 import os
 from copy import deepcopy
-from shutil import rmtree
 from ansible_runner import (
     Runner, RunnerConfig, run_command, run as ansible_runner_run
 )
 from ansible_directory_helper.private_data import PrivateData
 from fqdn import FQDN
-from . import __version__
 from .constants import *
 
 
@@ -14,10 +12,6 @@ class Lampsible:
 
     def __init__(self, web_user, web_host, action,
             private_data_dir=DEFAULT_PRIVATE_DATA_DIR,
-            # These are from CLI flags. There were a few that I skipped,
-            # because they either will be deprecated, or are not relevant in
-            # this context.
-            # TODO: Maybe type hint, and maybe use default values?
             apache_server_admin=DEFAULT_APACHE_SERVER_ADMIN,
             database_username=None,
             database_name=None, database_host=None, database_system_user=None,
@@ -30,9 +24,7 @@ class Lampsible:
             drupal_profile=DEFAULT_DRUPAL_PROFILE,
             app_name=None,
             app_build_path=None,
-            # TODO: For now, for back-compat, False by default, but
-            # it should actually be True.
-            ssl_certbot=False,
+            ssl_certbot=True,
             ssl_selfsigned=False, remote_sudo_password=None,
             ssh_key_file=None, apache_vhost_name=DEFAULT_APACHE_VHOST_NAME,
             apache_document_root=DEFAULT_APACHE_DOCUMENT_ROOT, database_password=None,
@@ -43,11 +35,8 @@ class Lampsible:
             app_local_env=False,
             laravel_artisan_commands=DEFAULT_LARAVEL_ARTISAN_COMMANDS,
             email_for_ssl=None,
-            domains_for_ssl=[], ssl_test_cert=False, insecure_skip_fail2ban=False,
+            domains_for_ssl=[], ssl_test_cert=False,
             extra_packages=[], extra_env_vars={},
-
-            # These are from arg_validator. In v1, arg_validator generates these
-            # variables, and passes them into extravars. We'll still need them here.
             apache_custom_conf_name='',
             ):
 
@@ -119,8 +108,6 @@ class Lampsible:
         self.app_local_env = app_local_env
         self.extra_packages = extra_packages
         self.extra_env_vars = extra_env_vars
-        # TODO: DEPRECATED
-        self.insecure_skip_fail2ban = insecure_skip_fail2ban
 
         if ssh_key_file:
             try:
@@ -330,7 +317,6 @@ class Lampsible:
             'ssl_selfsigned',
             'extra_packages',
             'extra_env_vars',
-            'insecure_skip_fail2ban',
             # TODO: This one especially... use Ansible Runner's
             # dedicated password feature, that is, we should add it
             # ansible-directory-helper.

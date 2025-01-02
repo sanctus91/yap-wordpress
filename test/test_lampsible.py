@@ -26,6 +26,8 @@ class TestLampsible(unittest.TestCase):
             database_username=DEFAULT_DATABASE_USERNAME,
             database_password='password',
             database_host=DEFAULT_DATABASE_HOST,
+            ssl_test_cert=True,
+            apache_server_admin='me@me.me'
         )
 
 
@@ -41,12 +43,6 @@ class TestLampsible(unittest.TestCase):
     def test_ssl_selfsigned(self):
         self.lampsible.set_action('apache')
         self.lampsible.ssl_selfsigned = True
-        self._do_test_run()
-
-
-    def test_ssl_certbot(self):
-        self.lampsible.set_action('apache')
-        self._prepare_test_certbot()
         self._do_test_run()
 
 
@@ -86,7 +82,6 @@ class TestLampsible(unittest.TestCase):
         self.lampsible.set_action('lamp-stack')
         self.lampsible.database_name = 'test_database'
         self.lampsible.php_extensions = ['php-mysql', 'php-xml']
-        self._prepare_test_certbot()
         self._do_test_run()
 
 
@@ -94,7 +89,6 @@ class TestLampsible(unittest.TestCase):
         self.lampsible.set_action('wordpress')
         self.lampsible.database_name = 'wordpress'
         self.lampsible.admin_password = 'password'
-        self._prepare_test_certbot()
         self._do_test_run()
 
 
@@ -102,7 +96,6 @@ class TestLampsible(unittest.TestCase):
         self.lampsible.set_action('joomla')
         self.lampsible.database_name = 'joomla'
         self.lampsible.admin_password = 'passwordpassword'
-        self._prepare_test_certbot()
         self._do_test_run()
 
 
@@ -110,7 +103,6 @@ class TestLampsible(unittest.TestCase):
         self.lampsible.set_action('drupal')
         self.lampsible.database_name = 'drupal'
         self.lampsible.admin_password = 'password'
-        self._prepare_test_certbot()
         self._do_test_run()
 
 
@@ -139,19 +131,12 @@ class TestLampsible(unittest.TestCase):
         self.lampsible.extra_env_vars = {
             'I_SHOULD_BE_IN': '.env-and-not-in-envvars'
         }
-        self._prepare_test_certbot()
         self._do_test_run()
 
 
     def _do_test_run(self):
         result = self.lampsible.run()
         self.assertEqual(result, 0)
-
-
-    def _prepare_test_certbot(self):
-        self.lampsible.ssl_certbot = True
-        self.lampsible.ssl_test_cert = True
-        self.lampsible.apache_server_admin = 'me@me.me'
 
 
     # TODO?

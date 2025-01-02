@@ -230,9 +230,7 @@ class ArgValidator():
 
 
     def validate_ssl_args(self):
-        # TODO: This will need to be refactored for version 2, because we
-        # will remove the flag --ssl-certbot, and make it True by default.
-        if self.args.ssl_certbot:
+        if not self.args.insecure_no_ssl and not self.args.ssl_selfsigned:
             self.handle_defaults([
                 {
                     'arg_name': 'domains_for_ssl',
@@ -575,18 +573,39 @@ class ArgValidator():
 
 
     def print_warnings(self):
-        if self.args.insecure_skip_fail2ban:
-            print('\nWarning! Will not install fail2ban! Your site will potentially be vulnerable to various brute force attacks. You should only pass the \'--insecure-skip-fail2ban\' flag if you have a good reason to do so. On production servers, always install fail2ban!')
-
         if self.args.wordpress_insecure_allow_xmlrpc:
-            print('\nWarning! Your WordPress site\'s xmlrpc.php endpoint will be enabled - this is insecure! The endpoint xmlrpc.php is a feature from older WordPress versions which allowed programmatic access to the WordPress backend. Although it has numerous known security vulnerabilities, namely a brute force and a DoS vulnerability, it is still, for some reason, enabled by default in current WordPress versions. Lampsible will, by default, block this endpoint with an .htaccess configuration, unless you specify otherwise, which you just did. You should not be doing this, unless you have some good reason to do so!')
+            print(dedent("""
+            Warning! Your WordPress site's xmlrpc.php endpoint will be
+            enabled - this is insecure! The endpoint xmlrpc.php is a feature
+            from older WordPress versions which allowed programmatic access
+            to the WordPress backend. Although it has numerous known security
+            vulnerabilities, namely a brute force and a DoS vulnerability,
+            it is still, for some reason, enabled by default in current
+            WordPress versions. Lampsible will, by default, block this
+            endpoint with an .htaccess configuration, unless you specify
+            otherwise, which you just did.
+            You should not be doing this, unless you have some good
+            reason to do so!
+            """))
 
-        if self.args.ssl_certbot and self.args.ssl_selfsigned:
-            print('\nWarning: Got --ssl-certbot, but also got --ssl-selfsigned. Ignoring --ssl-selfsigned and using --ssl-certbot.')
-        elif self.args.ssl_selfsigned:
-            print('\nWarning! Creating a self signed certificate to handle the site\'s encryption. This is less secure and will appear untrustworthy to any visitors. Only use this for testing environments.')
-        elif not (self.args.ssl_selfsigned or self.args.ssl_certbot):
-            print('\nWARNING! Your site will not have any encryption enabled! This is very insecure, as passwords and other sensitive data will be transmitted in clear text. DO NOT use this on any remote host or over any partially untrusted network. ONLY use this for local, secure, private and trusted networks, ideally only for local development servers.')
+        if self.args.ssl_selfsigned:
+            print(dedent("""
+            Warning! Creating a self signed certificate to handle the
+            site's encryption. This is less secure and will
+            appear untrustworthy to any visitors.
+            Only use this for testing environments.
+            """))
+
+        if self.args.insecure_no_ssl:
+            print(dedent("""
+            WARNING! Your site will not have any encryption enabled!
+            This is very insecure, as passwords and other sensitive data will
+            be transmitted in clear text.
+            DO NOT use this on any remote host or over any partially
+            untrusted network. ONLY use this for local, secure,
+            private and trusted networks,
+            ideally only for local development servers.
+            """))
 
 
     def validate_args(self):

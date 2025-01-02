@@ -40,4 +40,3 @@
 
     - include_role:
         name: fail2ban
-      when: not insecure_skip_fail2ban
