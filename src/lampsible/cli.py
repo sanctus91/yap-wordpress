@@ -46,8 +46,6 @@ def main():
     # --------
     parser.add_argument('-d', '--database-username', help="database user - If your website requires a database, and you leave this blank, you will be prompted to enter a value, or default to '{}'. If no database is required, and you leave this blank, no database user will be created.".format(DEFAULT_DATABASE_USERNAME))
     parser.add_argument('-n', '--database-name', help="name of your database - If your website requires a database, and you leave this blank, you will be prompted to enter a value, or default to a sensible default, depending on your app. If no database is required, and you leave this blank, no database will be created.")
-    # TODO: These aren't working yet, but it might be because of some configuration
-    # on the remote side (connection refused).
     parser.add_argument('--database-host', default=DEFAULT_DATABASE_HOST)
     parser.add_argument('--database-system-user-host', help="If database server is different than web server, pass this, and Ansible will install database stuff here. Otherwise, leave blank, and Ansible will install database stuff on web server, like in v1.")
     # TODO
@@ -120,13 +118,30 @@ def main():
 
     # SSL
     # ---
-    # TODO
-    # TODO: Deprecate this one.
-    parser.add_argument('-s', '--ssl-certbot', action='store_true',
-        help="Pass this flag to use Certbot to fully enable SSL for your site. You should also pass a valid email address to '--apache-server-admin', or alternatively to '--email-for-ssl'. If you are simply testing, pass '--test-cert' as well, to avoid being rate limited by Let's Encrypt."
+    parser.add_argument('--ssl-test-cert', action='store_true',
+        help="""
+        Set this flag to run certbot with the '--test-cert' flag.
+        This is useful if you frequently set up a test server,
+        and need to avoid being rate limited by Let's Encrypt.
+        """
     )
     parser.add_argument('--ssl-selfsigned', action='store_true',
-        help="Pass this flag to generate a self signed SSL certificate for your site. You should only do this on test servers, because it makes your site look untrustworthy to visitors."
+        help="""
+        Pass this flag to generate a self signed SSL certificate for your site.
+        You should only do this on test servers,
+        because it makes your site look untrustworthy to visitors.
+        """
+    )
+    # SSL
+    # ---
+    parser.add_argument('--email-for-ssl', help="the email address that will be passed to Certbot. If left blank, the value of '--apache-server-admin' will be used instead.")
+    parser.add_argument('--domains-for-ssl', help="a comma separated list of domains that will be passed to Certbot. If left blank, Lampsible will figure out what to use based on your host and action.")
+    parser.add_argument('--insecure-no-ssl', action='store_true',
+        help="""
+        Pass this flag to set up your website without any SSL encryption.
+        This is insecure, and should only be done on test servers in
+        local networks.
+        """
     )
 
     # ----------------------
@@ -180,9 +195,6 @@ def main():
 
     # WordPress
     # ---------
-    parser.add_argument('--wordpress-admin-password',
-        help="deprecated, use '--admin-password' instead"
-    )
     parser.add_argument('--wordpress-insecure-allow-xmlrpc',
         action='store_true',
         help="Pass this flag if you want your WordPress site's insecure(!) endpoint xmlrpc.php to be reachable. This will make your site vulnerable to various exploits, and you really shouldn't do this if you don't have a good reason for this."
@@ -206,17 +218,9 @@ def main():
         )
     )
 
-    # SSL
-    # ---
-    parser.add_argument('--email-for-ssl', help="the email address that will be passed to Certbot. If left blank, the value of '--apache-server-admin' will be used instead.")
-    parser.add_argument('--domains-for-ssl', help="a comma separated list of domains that will be passed to Certbot. If left blank, Lampsible will figure out what to use based on your host and action.")
-    parser.add_argument('--ssl-test-cert', action='store_true', help="Pass this flag along with '--ssl-certbot' if you are testing and want to avoid being rate limited by Let's Encrypt.")
-
     # Misc
     # ----
     parser.add_argument('--insecure-cli-password', action='store_true', help="If you want to pass passwords directly over the CLI, you have to pass this flag as well, otherwise Lampsible will refuse to run. This is not advised.")
-    # TODO: DEPRECATED.
-    parser.add_argument('--insecure-skip-fail2ban', action='store_true', help="Pass this flag if you don't want to install fail2ban on your server. This is insecure not advised.")
     parser.add_argument('--extra-packages', help="comma separated list of any extra packages to be installed on the remote server")
     parser.add_argument('--extra-env-vars', '-e', help="comma separated list of any extra environment variables that you want to pass to your web app. If you are installing a Laravel app, these variables will be appended to your app's .env file. Otherwise, they'll be appended to Apache's envvars file, typically found in /etc/apache2/envvars. Example: SOME_VARIABLE=some-value,OTHER_VARIABLE=other-value")
 
@@ -277,7 +281,7 @@ def main():
         apache_server_admin=args.apache_server_admin,
         apache_document_root=args.apache_document_root,
         apache_vhost_name=args.apache_vhost_name,
-        ssl_certbot=args.ssl_certbot,
+        ssl_certbot=(not (args.insecure_no_ssl or args.ssl_selfsigned)),
         ssl_selfsigned=args.ssl_selfsigned,
         ssl_test_cert=args.ssl_test_cert,
         email_for_ssl=args.email_for_ssl,
