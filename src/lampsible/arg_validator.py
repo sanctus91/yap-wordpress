@@ -29,7 +29,10 @@ class ArgValidator():
             tmp_args.web_user = tmp_inventory[0]
             tmp_args.web_host = tmp_inventory[1]
         except (AttributeError, AssertionError):
-            print('FATAL! First positional argument must be in the format of user@host')
+            print(dedent("""
+                FATAL! First positional argument must be in the format of user@host
+                """)
+            )
             return 1
         return tmp_args
 
@@ -146,7 +149,12 @@ class ArgValidator():
                 self.validated_args.database_system_user = db_sys_split[0]
                 self.validated_args.database_system_host = db_sys_split[1]
             except IndexError:
-                print("FATAL! --database-system-user-host must be in the format of 'user@host'. Alternatively, omit it to install database on web server.")
+                print(dedent("""
+                    FATAL! --database-system-user-host must be in the format of 'user@host'.
+                    Alternatively, omit it to install database on web server.
+                    """
+                    )
+                )
                 return 1
         else:
             # TODO: This is already taken care of in the Lampsible constructor.
@@ -305,9 +313,12 @@ class ArgValidator():
                 print('sudo add-apt-repository ppa:ondrej/php\n')
 
             elif self.validated_args.php_version != ubuntu_to_php_version[ubuntu_version]:
-                print('Warning! You are trying to install PHP {} on Ubuntu {}. Unless you manually configured the APT repository, this will not work.'.format(
-                    self.validated_args.php_version,
-                    self.ansible_facts['ubuntu_version']
+                print(dedent("""
+                    Warning! You are trying to install PHP {} on Ubuntu {}. Unless you manually configured the APT repository, this will not work.
+                    """.format(
+                        self.validated_args.php_version,
+                        self.ansible_facts['ubuntu_version']
+                    )
                 ))
 
         # TODO: A little redundant maybe because the Lampsible class now does something similar.
@@ -480,7 +491,12 @@ class ArgValidator():
                 True
             )
         if self.args.extra_env_vars:
-            print('Warning! You provided values for --extra-env-vars, but Joomla will not register these. What you are trying to do will likely not work.')
+            print(dedent("""
+                Warning! You provided values for --extra-env-vars, but Joomla
+                will not register these.
+                What you are trying to do will likely not work.
+                """
+                ))
 
         return 0
 
