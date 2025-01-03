@@ -70,15 +70,16 @@ lampsible someuser@somehost.com joomla \
     --email-for-ssl you@yourdomain.com
 ```
 
-Install a Laravel app on a test server:
+Install Drupal on a test server. Certbot will set up a
+test certificate. Also, Apache and MySQL will run on two separate hosts.
 
 ```
-lampsible someuser@somehost.com laravel \
+lampsible someuser@somehost.com drupal \
+    --database-system-user-host otheruser@dbserver.somehost.com \
+    --database-host 10.0.1.2 \
+    --database-username dbuser
     --ssl-test-cert \
     --apache-server-admin you@yourdomain.com \
-    --app-name cool-laravel-app \
-    --app-build-path /path/to/your/local/cool-laravel-app-2.0.tar.gz \
-    --laravel-artisan-commands key:generate,migrate
 ```
 
 Set up a LAMP stack with various custom configuration and a self signed SSL certificate on some local VM:
