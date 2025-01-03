@@ -1,12 +1,9 @@
 import os
 from re import match
-from copy import copy, deepcopy
-from warnings import warn
+from copy import deepcopy
 from getpass import getpass
 from textwrap import dedent
 from requests import head as requests_head
-from ansible_runner import Runner, RunnerConfig
-from ansible_directory_helper.inventory_file import InventoryFile
 from lampsible.constants import *
 
 
@@ -230,7 +227,14 @@ class ArgValidator():
 
 
     def validate_ssl_args(self):
-        if not self.args.insecure_no_ssl and not self.args.ssl_selfsigned:
+        # TODO: Improve this.
+        if not self.args.insecure_no_ssl \
+                and not self.args.ssl_selfsigned \
+                and not self.args.action in [
+                    'php',
+                    'mysql',
+                    'dump-ansible-facts'
+                ]:
             self.handle_defaults([
                 {
                     'arg_name': 'domains_for_ssl',

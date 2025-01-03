@@ -281,7 +281,17 @@ def main():
         apache_server_admin=args.apache_server_admin,
         apache_document_root=args.apache_document_root,
         apache_vhost_name=args.apache_vhost_name,
-        ssl_certbot=(not (args.insecure_no_ssl or args.ssl_selfsigned)),
+        # TODO: Improve this. The Lampsible library should handle this,
+        # otherwise users will experience annoying errors.
+        ssl_certbot=(not (
+            args.insecure_no_ssl
+            or args.ssl_selfsigned
+            or args.action in [
+                'dump-ansible-facts',
+                'php',
+                'mysql',
+            ]
+            )),
         ssl_selfsigned=args.ssl_selfsigned,
         ssl_test_cert=args.ssl_test_cert,
         email_for_ssl=args.email_for_ssl,
