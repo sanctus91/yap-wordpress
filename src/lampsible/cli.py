@@ -1,5 +1,5 @@
 import argparse
-from ansible_runner import Runner, RunnerConfig
+from ansible_runner import Runner, RunnerConfig, run_command
 from . import __version__
 from .constants import *
 from .lampsible import Lampsible
@@ -328,23 +328,27 @@ def main():
     if galaxy_result == 1:
         return 1
 
-    lampsible.run()
-
 
     if args.action == 'dump-ansible-facts':
-        # TODO
-        # TODO: Perhaps we can improve this. For example, if we refactor
-        # the handling of inventories, we could do this with Ansible Runner's
-        # 'module' feature (that is, pass the kwargs module='setup' to the
-        # configuration).
-        # However, for now, this also works quite well.
-        # run_command(
-        #     executable_cmd='ansible',
-        #     cmdline_args=['-i', inventory, 'ungrouped', '-m', 'setup'],
-        # )
-        # return 0
-        # TODO: Have to refactor this, see comment above.
-        raise NotImplementedError()
+        # TODO: Refactor this.
+        run_command(
+            executable_cmd='ansible',
+            cmdline_args=[
+                '-i',
+                '{}@{},'.format(
+                    args.web_user,
+                    args.web_host,
+                ),
+                'ungrouped',
+                '-m',
+                'setup'
+            ]
+        )
+        lampsible.private_data_helper.cleanup_dir()
+        return 0
+
+    else:
+        lampsible.run()
 
     return 0
 
