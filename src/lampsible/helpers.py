@@ -46,12 +46,14 @@ def ensure_ansible_galaxy_dependencies(galaxy_requirements_file, user_home_dir):
     if len(missing_collections) == 0:
         return 0
     else:
-        return install_galaxy_collections(missing_collections)
+        return install_galaxy_collections(missing_collections, user_home_dir)
 
 
-def install_galaxy_collections(collections):
+# TODO: Again, see above about USER_HOME_DIR. However, I will
+# refactor the Galaxy stuff soon anyway.
+def install_galaxy_collections(collections, user_home_dir):
     ok_to_install = input("\nI have to download and install the following Ansible Galaxy dependencies into {}:\n- {}\nIs this OK (yes/no)? ".format(
-        os.path.join(USER_HOME_DIR, '.ansible/'),
+        os.path.join(user_home_dir, '.ansible/'),
         '\n- '.join(collections)
     )).lower()
     while ok_to_install != 'yes' and ok_to_install != 'no':
