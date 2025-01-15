@@ -213,14 +213,25 @@ class ArgValidator():
         r = Runner(config=rc)
         r.run()
 
-        # TODO: Dealing with hosts this way is definitely an antipattern
-        # that I want to get rid of by version 2...
-        self.ansible_facts = r.get_fact_cache(
-            '{}@{}'.format(
-                self.web_host_user,
-                self.web_host
+        if r.status == 'successful':
+            # TODO: Dealing with hosts this way is definitely an antipattern
+            # that I want to get rid of by version 2...
+            self.ansible_facts = r.get_fact_cache(
+                '{}@{}'.format(
+                    self.web_host_user,
+                    self.web_host
+                )
             )
-        )
+            return 0
+        else:
+            print(dedent("""
+                        FATAL! Failed to fetch Ansible facts.
+                        This is most likely because Ansible cannot establish
+                        an SSH connection to your host. Please double check
+                        SSH credentials and try again.
+                         """
+            ))
+            return 1
 
 
     def handle_defaults(
@@ -894,12 +905,9 @@ class ArgValidator():
 
 
     def validate_args(self):
-        result = self.prepare_inventory()
-        if result != 0:
-            return result
-
-        self.fetch_ansible_facts()
         validate_methods = [
+            'prepare_inventory',
+            'fetch_ansible_facts',
             'validate_ansible_runner_args',
             'validate_apache_args',
             'validate_database_args',
