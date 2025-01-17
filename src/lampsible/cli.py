@@ -1,4 +1,5 @@
 import argparse
+from textwrap import dedent
 from ansible_runner import Runner, RunnerConfig, run_command
 from . import __version__
 from .constants import *
@@ -422,7 +423,21 @@ def main():
     tmp_r = Runner(config=tmp_rc)
     tmp_r.run()
 
-    ansible_facts = tmp_r.get_fact_cache('{}@{}'.format(tmp_args.web_user, tmp_args.web_host))
+    if tmp_r.status == 'successful':
+        ansible_facts = tmp_r.get_fact_cache(
+            '{}@{}'.format(
+                tmp_args.web_user,
+                tmp_args.web_host
+            ))
+    else:
+        print(dedent("""
+                    FATAL! Failed to fetch Ansible facts.
+                    This is most likely because Ansible cannot establish
+                    an SSH connection to your host. Please double check
+                    SSH credentials and try again.
+                     """
+        ))
+        return 1
 
     validator = ArgValidator(args, ansible_facts)
     result = validator.validate_args()
