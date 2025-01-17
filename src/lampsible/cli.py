@@ -393,53 +393,7 @@ def main():
 
     print(LAMPSIBLE_BANNER)
 
-    # Fetching Ansible Facts
-    # TODO: The only reason that we do this, is so we can check the
-    # PHP version against the remote Ubuntu version. So we should
-    # move this ArgValidator.validate_php_args, and only call it if
-    # the user passed in a php_version.
-
-    tmp_args = ArgValidator.pre_validate_args(args)
-    if tmp_args == 1:
-        print('FATAL! Got invalid user input, and cannot continue. Please fix the issues listed above and try again.')
-        return 1
-
-    tmp_rc = RunnerConfig(
-        private_data_dir=tmp_args.private_data_dir,
-        project_dir=PROJECT_DIR,
-        inventory='{}@{},'.format(tmp_args.web_user, tmp_args.web_host),
-        playbook='get-ansible-facts.yml',
-    )
-
-    if args.ssh_key_file:
-        try:
-            with open(os.path.abspath(args.ssh_key_file), 'r') as key_file:
-                key_data = key_file.read()
-            tmp_rc.ssh_key_data = key_data
-        except FileNotFoundError:
-            print('Warning! SSH key file not found!')
-
-    tmp_rc.prepare()
-    tmp_r = Runner(config=tmp_rc)
-    tmp_r.run()
-
-    if tmp_r.status == 'successful':
-        ansible_facts = tmp_r.get_fact_cache(
-            '{}@{}'.format(
-                tmp_args.web_user,
-                tmp_args.web_host
-            ))
-    else:
-        print(dedent("""
-                    FATAL! Failed to fetch Ansible facts.
-                    This is most likely because Ansible cannot establish
-                    an SSH connection to your host. Please double check
-                    SSH credentials and try again.
-                     """
-        ))
-        return 1
-
-    validator = ArgValidator(args, ansible_facts)
+    validator = ArgValidator(args)
     result = validator.validate_args()
 
     if result != 0:

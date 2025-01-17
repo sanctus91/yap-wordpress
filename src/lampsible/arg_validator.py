@@ -9,32 +9,9 @@ from lampsible.constants import *
 
 class ArgValidator():
 
-    def __init__(self, args, ansible_facts):
+    def __init__(self, args):
         self.args           = args
         self.validated_args = deepcopy(args)
-        self.ansible_facts  = ansible_facts
-
-
-    @staticmethod
-    def pre_validate_args(raw_args):
-        tmp_args = deepcopy(raw_args)
-        try:
-            os.makedirs(tmp_args.private_data_dir)
-        except FileExistsError:
-            pass
-
-        try:
-            tmp_inventory = tmp_args.web_user_host.split('@')
-            assert len(tmp_inventory) == 2
-            tmp_args.web_user = tmp_inventory[0]
-            tmp_args.web_host = tmp_inventory[1]
-        except (AttributeError, AssertionError):
-            print(dedent("""
-                FATAL! First positional argument must be in the format of user@host
-                """)
-            )
-            return 1
-        return tmp_args
 
 
     def get_validated_args(self):
@@ -275,51 +252,10 @@ class ArgValidator():
         ]:
             return 0
 
-        if self.args.php_version:
-            if int(self.ansible_facts['ubuntu_version']) <= 20:
-                ubuntu_version = 'legacy'
-            else:
-                ubuntu_version = self.ansible_facts['ubuntu_version']
-
-            ubuntu_to_php_version = {
-                'legacy': '7.4',
-                '21'    : '8.0',
-                '22'    : '8.1',
-                '23'    : '8.2',
-                '24'    : '8.3',
-                'latest': '8.3',
-            }
-            # Sanity check
-            if self.validated_args.php_version not in SUPPORTED_PHP_VERSIONS:
-                print('FATAL! Invalid PHP version!')
-                return 1
-            # User passed a value, warn them if it's likely to not work.
-            # TODO: In the future, we should have a global "non-interactive" flag,
-            # based on which this can be handled better, for example, "interactive"
-            # mode could offer to correct the user's input.
-
-            # Temporary notice about manually adding support for PHP 8.4.
-            elif self.validated_args.php_version == '8.4':
-                print(dedent("""
-                    Warning! PHP 8.4 is the latest stable PHP version, but at the
-                    moment, Ubuntu package repositories are still configured
-                    for PHP 8.3.
-                    What you are trying to do will not work without manually
-                    configuring your server's APT repositories.
-
-                    Run these commands on the server before proceeding:
-                """))
-                print('sudo apt install software-properties-common')
-                print('sudo add-apt-repository ppa:ondrej/php\n')
-
-            elif self.validated_args.php_version != ubuntu_to_php_version[ubuntu_version]:
-                print(dedent("""
-                    Warning! You are trying to install PHP {} on Ubuntu {}. Unless you manually configured the APT repository, this will not work.
-                    """.format(
-                        self.validated_args.php_version,
-                        self.ansible_facts['ubuntu_version']
-                    )
-                ))
+        if self.args.php_version \
+                and self.args.php_version not in SUPPORTED_PHP_VERSIONS:
+            print('Got invalid PHP version!')
+            return 1
 
         # TODO: A little redundant maybe because the Lampsible class now does something similar.
         # Based on the action, it appends anything else that it might need.
